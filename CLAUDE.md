@@ -109,32 +109,6 @@ Each chapter should follow:
 
 ---
 
-## 🔑 Known Content Gaps (Improvements Needed)
-
-Based on recent analysis, these areas need enhancement:
-
-### Chapter 1: SVD and Gaussian Connection
-- **Missing**: "Data Whitening (화이트닝)" concept
-- **Add**: How SVD transforms ellipsoid data → standard normal distribution N(0,I)
-- **Why**: Critical for understanding VAE regularization and Diffusion models
-
-### Chapter 6: KL Divergence as Regularization
-- **Missing**: Three-part penalty explanation (centering μ², compression σ², volume −log σ²)
-- **Add**: "Filled latent space" concept (why gaps in latent space are bad)
-- **Why**: Essential for VAE training and understanding why random sampling generates coherent images
-
-### Chapter 2-7: Graph Laplacian ↔ Diffusion Connection
-- **Missing**: Link between discrete (Graph Laplacian L=D-A) and continuous (PDE Laplacian ∂²u/∂x²)
-- **Add**: Both measure "neighbor differences" → same mathematical principle
-- **Why**: Unifies GNN theory with Diffusion model understanding
-
-### Chapter 2: Reverse Mode AD Efficiency
-- **Missing**: Computational complexity comparison (not just "it works")
-- **Add**: Forward Mode = 1 billion computations, Reverse Mode = 1 backward pass (for deep networks)
-- **Why**: Explains why all deep learning uses backpropagation
-
----
-
 ## 💻 Working with Notebooks
 
 ### Reading Notebooks
@@ -211,9 +185,8 @@ NotebookEdit(
 2. Read: notebook/chapter1/README.md
 3. Read: relevant notebooks (MNIST-SVD.ipynb, etc.)
 4. Check PDF pages 10-36 if needed
-5. Identify gaps using the "Known Content Gaps" section above
-6. Improve README or notebooks
-7. Commit with message: "Improve Chapter N: [specific improvement]"
+5. Improve README or notebooks
+6. Commit with message: "Improve Chapter N: [specific improvement]"
 ```
 
 ### Git Commit Messages
@@ -271,6 +244,44 @@ git commit -m "Add Chapter 2 intuition: Forward vs Reverse AD complexity compari
 - Use chapter page ranges from table above
 - Read ONLY the relevant pages
 - Always ask "which section?" if unclear
+
+#### PDF 읽기 방법 (PyMuPDF 사용)
+
+Claude Code의 Read 도구는 대용량 PDF를 직접 읽을 수 없습니다. 대신 PyMuPDF를 사용하세요:
+
+```python
+# 1. PyMuPDF 설치 (최초 1회)
+pip3 install pymupdf
+
+# 2. 특정 챕터 페이지만 추출
+python3 << 'EOF'
+import fitz  # PyMuPDF
+
+doc = fitz.open("MathGenAIBook12_14_25.pdf")
+
+# Chapter 1: pages 10-36 (0-indexed: 9-35)
+for page_num in range(9, 36):
+    page = doc[page_num]
+    text = page.get_text()
+    print(f"\n--- Page {page_num + 1} ---\n")
+    print(text)
+
+doc.close()
+EOF
+```
+
+**페이지 범위 참조 (0-indexed):**
+| Chapter | Pages (1-indexed) | range() (0-indexed) |
+|---------|-------------------|---------------------|
+| 1 | 10-36 | `range(9, 36)` |
+| 2 | 38-63 | `range(37, 63)` |
+| 3 | 65-97 | `range(64, 97)` |
+| 4 | 99-132 | `range(98, 132)` |
+| 5 | 134-162 | `range(133, 162)` |
+| 6 | 163-196 | `range(162, 196)` |
+| 7 | 198-233 | `range(197, 233)` |
+| 8 | 235-264 | `range(234, 264)` |
+| 9 | 266+ | `range(265, len(doc))` |
 
 **Notebooks (1-3 MB each):**
 - Self-contained, can read fully
