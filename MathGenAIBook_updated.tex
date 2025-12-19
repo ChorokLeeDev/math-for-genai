@@ -1,0 +1,1635 @@
+\documentclass[11pt,letterpaper]{book}
+
+% Essential packages
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{mathtools}
+\usepackage{bm}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{fancyhdr}
+\usepackage{geometry}
+\geometry{margin=1in}
+
+% Theorem environments
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[chapter]
+\newtheorem{example}{Example}[chapter]
+\newtheorem{exercise}{Exercise}[chapter]
+\newtheorem{remark}{Remark}[chapter]
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[chapter]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+
+% Custom commands
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Prob}{\mathbb{P}}
+\newcommand{\Var}{\mathrm{Var}}
+\newcommand{\Cov}{\mathrm{Cov}}
+\newcommand{\tr}{\mathrm{tr}}
+\newcommand{\diag}{\mathrm{diag}}
+\newcommand{\sign}{\mathrm{sign}}
+\newcommand{\softmax}{\mathrm{softmax}}
+\newcommand{\ReLU}{\mathrm{ReLU}}
+\newcommand{\LayerNorm}{\mathrm{LayerNorm}}
+\newcommand{\Proj}{\mathrm{Proj}}
+\newcommand{\KL}{\mathrm{KL}}
+
+% Header/Footer
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[RE]{\leftmark}
+\fancyhead[LO]{\rightmark}
+
+% Hyperref setup
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    citecolor=blue,
+    urlcolor=blue
+}
+
+\title{\Huge\textbf{Mathematics of Generative AI}}
+\author{\Large Michael Chertkov\\[0.5em]
+\normalsize Applied Mathematics, University of Arizona, Tucson, AZ 85721, USA}
+\date{December 14, 2025}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+
+%========================================
+% INTRODUCTION
+%========================================
+\chapter*{Introduction to the ``Mathematics of Generative AI''}
+\addcontentsline{toc}{chapter}{Introduction}
+
+This book aims to build a clear and modern bridge between the rapidly evolving practice of Generative AI and the mathematical principles that underlie it. Its primary audience is advanced STEM undergraduates, graduate students, and research-minded AI practitioners who have seen core undergraduate mathematics (linear algebra, differential equations, probability, optimization) but now seek an integrated view of how these ideas power state-of-the-art generative models. Rather than treating mathematics and AI as separate subjects, the book presents them as a single, mutually reinforcing narrative -- mathematics illuminated by AI, and AI clarified through mathematics.
+
+\section*{What Makes This Book Different?}
+
+Most applied mathematics textbooks build upward: fundamentals first, applications last. This book takes a more fluid and strategically timed approach. While we do not open with full Generative AI (GenAI) case studies or advanced architectures, we introduce the motivating phenomena of modern GenAI -- diffusion models, transformers, high-dimensional representation learning -- as soon as the relevant mathematical groundwork is in place. In this way, the appearance of each AI example is synchronized with the mathematical ideas that illuminate it. This ``application-aligned'' route helps the reader maintain a sense of purpose: every mathematical concept is introduced because it is required to understand an insight, mechanism, or algorithm that matters today. Since the field of GenAI is a moving target, the book emphasizes not completeness but relevance, focusing on mathematical structures that currently shape research frontiers.
+
+\section*{A Selective Approach to Mathematical Foundations}
+
+Generative AI relies on a remarkably broad mathematical toolkit: linear algebra, optimization, stochastic calculus, variational principles, statistical mechanics, and more. This book does not attempt a comprehensive survey. Instead, it takes a curated, selective approach, choosing mathematical ideas that directly empower the reader to understand diffusion models, denoising, score matching, autoencoders, transformers, and the stochastic control/transport interpretations that unify many of these themes. The emphasis throughout is on conceptual clarity and practical utility: What does this piece of mathematics buy us in GenAI? Why does this identity, inequality, or operator show up again and again? Where rigorous treatments would distract from intuition, we point the reader to standard references and keep the exposition focused on insight and mechanism.
+
+\section*{Learning by Doing}
+
+The book follows a learning-by-doing philosophy. Each chapter contains exercises that blend:
+\begin{itemize}
+    \item core mathematical manipulations;
+    \item conceptual questions that probe understanding;
+    \item exploratory tasks based on recent AI techniques;
+    \item computational experiments in Python.
+\end{itemize}
+
+Many readers find that intuition for generative models develops most naturally through experimentation -- visualizing diffusions, probing loss surfaces, inspecting denoisers, and comparing implementations. The book therefore encourages curiosity, creativity, and iterative experimentation as essential complements to theory.
+
+This philosophy is concretely implemented through tight integration with computational resources. All theoretical examples, exercises, and the majority of the figures presented in the text are computationally realized via linked Jupyter/Python notebooks. This seamless integration allows the reader to immediately test concepts, visualize complex functions, and modify models. As a continuously evolving resource, the current version of the living book (pdf file), along with the complete collection of notebooks organized by chapter, are maintained and updated on our public repository: \url{https://github.com/mchertkov/Mathematics-of-Generative-AI-Book}.
+
+\section*{Acknowledgments}
+
+The December 2025 edition of this living book reflects the insight and generosity of many colleagues, collaborators, and students. Their contributions -- ranging from lectures and notes to code and exercises -- shaped the material in ways that a single author could not.
+
+Robert Ferrando -- a graduate student in Applied Mathematics at the University of Arizona and my co-instructor for Math 496T/Spring 2025 at University of Arizona -- deserves special thanks. Robert advised me on countless technical points, delivered two guest lectures, and compiled the complete set of exercise solutions in the Spring of 2025. His insight, enthusiasm, and talent for explaining subtle ideas were indispensable; without his help these notes would not have come to life.
+
+I am equally grateful to my colleagues Jason Aubrey and Arvind Suresh for sharing their relevant notes and offering timely advice as the material of Math496T evolved. Arvind also contributed two guest lectures on practical neural-network implementation in PyTorch, enriching the applied component of the course.
+
+Heartfelt thanks go to the Math 496T students. Their curiosity, sharp questions, and vigilant spotting of errors shaped the exposition and pushed the project far beyond what a single author could achieve.
+
+AI-assisted tools (including large language models) are also used in the preparation and editing of the text. Their role is acknowledged as part of modern mathematical and computational practice, and their contributions -- while carefully curated -- help accelerate iteration and broaden perspective.
+
+%========================================
+% CHAPTER 1: LINEAR ALGEBRA
+%========================================
+\chapter{Linear Algebra (of AI)}
+
+\section{Foundations of Representing Data}
+
+\subsection{Vectors}
+
+A vector is an ordered collection of numbers (or elements) that can represent points, directions, or quantities in space. Mathematically, a vector in $n$-dimensional real space is represented as:
+\[
+\mathbf{v} = [v_1, v_2, \ldots, v_n]^\top \in \R^n
+\]
+where $v_i$ are the components of the vector; $n$ is dimensionality of the vector; $[v_1, v_2, \ldots, v_n]$ is the notation we use for the row-vector; and ${}^\top$ is the transposition turning row vector to column vector and vice versa. Later in the text, we will use the same notation, such as $\mathbf{v}$, interchangeably for both a row vector and a column vector. Any potential ambiguities will be explicitly clarified when they arise.
+
+\textbf{Key Operations:}
+\begin{itemize}
+    \item \textbf{Addition:} $(\mathbf{u} + \mathbf{v})_i = u_i + v_i$, $\mathbf{u}$ and $\mathbf{v}$ are vectors of the same dimensionality
+    \item \textbf{Scalar multiplication:} $(c\mathbf{v})_i = cv_i$, where $c$ is a scalar
+    \item \textbf{Product:} $\mathbf{u}\mathbf{v}^\top = \sum_{i=1}^n u_i v_i$, where $\mathbf{u}$ and $\mathbf{v}$ are co-dimensional vectors
+    \item \textbf{Norm:} $\|\mathbf{v}\| = \sqrt{\mathbf{v}\mathbf{v}^\top}$
+\end{itemize}
+
+Vectors are used to represent data points (e.g., pixel intensities in an image, word embeddings in NLP) or transformations (e.g., directions of gradients in optimization).
+
+\subsection{Matrices: Representing Linear Transformations}
+
+A matrix is a 2D array of numbers that generalizes vectors to multiple dimensions. A matrix $A \in \R^{m \times n}$ can be represented as:
+\[
+A = \begin{pmatrix}
+A_{11} & A_{12} & \cdots & A_{1n} \\
+A_{21} & A_{22} & \cdots & A_{2n} \\
+\vdots & \vdots & \ddots & \vdots \\
+A_{m1} & A_{m2} & \cdots & A_{mn}
+\end{pmatrix}
+\]
+
+\textbf{Key Operations:}
+\begin{itemize}
+    \item \textbf{Addition:} Element-wise addition (for matrices with the same dimensions) --
+    $(A + B)_{ij} = A_{ij} + B_{ij}$.
+    
+    \item \textbf{Element-Wise Multiplication:} The element-wise (Hadamard) product of matrices $A$ and $B$ (with the same dimensions) is denoted by $\odot$ and computed as:
+    $(A \odot B)_{ij} = A_{ij} B_{ij}$.
+    
+    \item \textbf{Multiplication:} Matrix-vector and matrix-matrix multiplication --
+    \[
+    (AB)_{ij} = \sum_{k=1}^n A_{ik} B_{kj}, \quad (A\mathbf{v})_i = \sum_{j=1}^n A_{ij} v_j,
+    \]
+    where the inner dimensions of $A$ and $B$ must match.
+    
+    \item \textbf{Transpose:} The transpose of a matrix is defined as:
+    $(A^\top)_{ij} = A_{ji}$.
+    
+    \item \textbf{Inverse:} The inverse of a square and invertible matrix $A$, denoted as $A^{-1}$, satisfies:
+    $AA^{-1} = A^{-1}A = I$,
+    where $I$ is the identity matrix, defined as $I_{ii} = 1$ and $I_{ij} = 0$ for $i \neq j$.
+\end{itemize}
+
+Why do we associate matrices with linear algebra? Because matrices serve as fundamental tools for representing linear transformations in a general form. A $n \times m$ dimensional matrix acting on a $m$-dimensional vector represents linear transformations such as rotations, rescaling, and projections of the vector:
+
+\begin{enumerate}
+    \item \textbf{Rotation:} For example, a 3D rotation matrix around the $z$-axis by an angle $\theta$ (in radians) is given by:
+    \[
+    R_z(\theta) = \begin{pmatrix}
+    \cos\theta & -\sin\theta & 0 \\
+    \sin\theta & \cos\theta & 0 \\
+    0 & 0 & 1
+    \end{pmatrix}.
+    \]
+    If we apply the matrix to the unit vector aligned with the $x$-axis, $R_z(\theta)[1, 0, 0]^\top$, the result is the unit vector rotated by the angle $\theta$ in the $(x, y)$-plane.
+    
+    \item \textbf{Re-scaling:} A re-scaling transformation adjusts the magnitude of vectors along specified axes. For example, the following matrix rescales vectors in the $x$- and $y$-directions by factors $s_x$ and $s_y$, respectively:
+    \[
+    S = \begin{pmatrix}
+    s_x & 0 \\
+    0 & s_y
+    \end{pmatrix}.
+    \]
+    Applying this matrix to a vector $\mathbf{x} = [x, y]^\top$ results in:
+    $\mathbf{y} = S\mathbf{x} = \begin{pmatrix} s_x x \\ s_y y \end{pmatrix}$.
+    
+    \item \textbf{Projection:} A projection transformation maps vectors onto a subspace. For example, a projection onto the $x$-axis in 2D is given by the matrix:
+    \[
+    P_1 = \begin{pmatrix}
+    1 & 0 \\
+    0 & 0
+    \end{pmatrix}.
+    \]
+    Applying this matrix to a vector $[x, y]^\top$ gives:
+    $\mathbf{y} = P_1\mathbf{x} = \begin{pmatrix} x \\ 0 \end{pmatrix}$.
+    This operation removes the second $y$-component of the vector, effectively projecting it onto the first $x$-axis.
+\end{enumerate}
+
+Summarizing/rephrasing -- any linear map $L : \R^n \to \R^m$ can be uniquely expressed in terms of a matrix $A \in \R^{m \times n}$ such that for any vector $\mathbf{x} \in \R^n$, the image $L(\mathbf{x})$ is given by $L(\mathbf{x}) = A\mathbf{x}$. This representation encapsulates the aforementioned essential operations like scaling, rotations, and projections, and is indispensable in various applications, from solving systems of linear equations to encoding (some) transformations in Neural Networks (NN). Moreover, matrices also facilitate iterative processes, such as those encountered in diffusion models, where repeated applications of matrix multiplications are key to de-noising and generating data.
+
+\begin{exercise}[Matrix Multiplication and Elliptical Dynamics]
+\begin{enumerate}[(a)]
+    \item Consider $\mathbf{x}_0 = (a, 0)^\top$, a column vector in 2D. Design a $2 \times 2$ matrix $A$ such that its repeated application to $\mathbf{x}_0$:
+    \[
+    \mathbf{x}_t = A^t \mathbf{x}_0, \quad t = 1, 2, \cdots,
+    \]
+    results in all $\mathbf{x}_t$ lying on an ellipse with a semi-axis ratio of $a/b$. Here, $A^t$ represents the matrix $A$ raised to the power $t$, meaning $t$-fold matrix multiplication.
+    
+    \item Can you ensure that as $t \to \infty$, the trajectory of $\mathbf{x}_t$ covers the entire ellipse? In other words, is it possible to design $A$ such that the process explores all points on the ellipse in the limit of infinite iterations?
+\end{enumerate}
+\end{exercise}
+
+\subsection{Convolution: Bridging Linear Algebra and Applications in AI}
+
+Convolution is a fundamental operation in linear algebra and signal processing, playing a pivotal role in many applications, including modern AI architectures. Here, we introduce convolution and demonstrate its relevance in practical settings, particularly its compactness and efficiency compared to other forms of linear transformations.
+
+Convolution combines two inputs $f$ and $g$, producing an output that reflects their interaction. In a one-dimensional case, for functions $f$ and $g$ defined on $\R$, the convolution $(f * g)(t)$ is defined as:
+\[
+(f * g)(t) = \int_{-\infty}^{\infty} f(\tau) g(t - \tau) \, d\tau.
+\]
+
+In discrete settings, such as in linear algebra -- where discreteness is represented via indices -- convolution is often applied to vectors or matrices.
+
+Convolution should be viewed as a particular form of a linear transformation. Consider the following example: the convolution of the vector $\mathbf{x} \in \R^n$ and a kernel (filter) $\mathbf{k} \in \R^m$, where $m < n$, resulting in $\mathbf{y} \in \R^{n-m+1}$:
+\[
+y_i = \sum_{j=1}^m k_j \cdot x_{i+j-1}, \quad i = 1, 2, \ldots, n - m + 1.
+\]
+
+This operation can be represented as a structured matrix-vector multiplication, where matrix $A(\mathbf{k})$ acts on $\mathbf{x}$ to produce $\mathbf{y}$:
+\[
+\mathbf{y} = A(\mathbf{k}) \cdot \mathbf{x}, \quad A(\mathbf{k}) = \begin{pmatrix}
+k_1 & 0 & \cdots & 0 \\
+k_2 & k_1 & \cdots & 0 \\
+\vdots & k_2 & \ddots & \vdots \\
+k_m & \vdots & \cdots & k_1 \\
+0 & k_m & \ddots & \vdots \\
+\vdots & 0 & \cdots & k_m
+\end{pmatrix}.
+\]
+
+In this formulation, each entry $y_i$ of the output vector $\mathbf{y}$ is obtained by computing the dot product of the kernel $\mathbf{k}$ with a corresponding window of the input vector $\mathbf{x}$. This emphasizes that convolution is fundamentally a linear transformation that is computationally efficient and compact.
+
+\begin{example}[Convolutional Neural Networks]
+Let us discuss a fundamental building block of Convolutional Neural Networks (CNNs): the linear part of a single convolutional layer. While a full CNN architecture typically involves multiple convolutional, pooling, and fully connected layers, here we restrict our discussion to the operation of a single convolutional layer to illustrate its role in feature extraction.
+
+Consider an input image $\mathbf{x} \in \R^{n \times n}$. A convolutional filter $\mathbf{k} \in \R^{m \times m}$ slides across $\mathbf{x}$, producing the output:
+\[
+y_{i,j} = \sum_{h,w=1}^m k_{h,w} \cdot x_{i+h-1,j+w-1}, \quad i, j = 1, \cdots, n - m + 1.
+\]
+\end{example}
+
+\begin{example}[Image to Tensor]
+Consider a grayscale image $\mathbf{x} \in \R^{4 \times 4}$ and a filter $\mathbf{k} \in \R^{2 \times 2}$:
+\[
+\mathbf{x} = \begin{pmatrix}
+1 & 2 & 3 & 0 \\
+4 & 5 & 6 & 1 \\
+7 & 8 & 9 & 0 \\
+1 & 0 & 2 & 3
+\end{pmatrix}, \quad \mathbf{k} = \begin{pmatrix}
+1 & 0 \\
+0 & -1
+\end{pmatrix}.
+\]
+
+The convolution of $\mathbf{x}$ with the filter $\mathbf{k}$ becomes:
+\[
+\mathbf{y} = \begin{pmatrix}
+-4 & -4 & 2 \\
+-4 & -4 & 6 \\
+7 & 6 & 6
+\end{pmatrix}.
+\]
+
+Two remarks are in order. First, notice that the number of operations required to express elements of matrix $\mathbf{y}$ via matrix $\mathbf{x}$ in the form of a linear transformation is larger than in the form of a convolution (4 vs. 2). This emphasizes that convolution, when possible, can be a much more compact representation than a general linear transformation.
+
+Second, $A$ in the linear transformation formulation is an example of a new type of object -- a tensor -- which we will discuss in the next subsection.
+\end{example}
+
+\subsection{Tensors: The Generalization}
+
+The word ``tensor'' originates from the Latin word \emph{tendere}, which means ``to stretch.'' The term was introduced into mathematics and physics to describe objects that generalize the notion of scalars, vectors, and matrices to higher dimensions -- we also call it rank or order -- capturing properties related to ``stretching'' or ``deformation.''
+
+A tensor $T$ of rank $k$ can be represented as:
+\[
+T \in \R^{d_1 \times d_2 \times \cdots \times d_k}
+\]
+where $d_i$ is the size along the $i$-th dimension.
+
+\textbf{Rank:}
+\begin{itemize}
+    \item \textbf{Scalars:} Rank 0.
+    \item \textbf{Vectors:} Rank 1.
+    \item \textbf{Matrices:} Rank 2.
+    \item \textbf{Higher-rank tensors:} $k \geq 3$.
+\end{itemize}
+
+\begin{example}[Representing RGB Images]
+RGB images are commonly represented as tensors in $\R^{H \times W \times 3}$, where:
+\begin{itemize}
+    \item $H$: Height of the image (number of rows),
+    \item $W$: Width of the image (number of columns),
+    \item $3$: The three color channels: Red, Green, and Blue.
+\end{itemize}
+
+For instance, a color image of size $256 \times 256$ may be represented as a tensor $T \in \R^{256 \times 256 \times 3}$.
+\end{example}
+
+\subsubsection{Tensor Operations: Direct Product and Contraction-Based Product}
+
+Tensors serve as versatile tools for representing and manipulating multi-dimensional data. In this subsection, we focus on two fundamental tensor operations: the \textbf{direct product}, which creates higher-rank tensors, and the \textbf{contraction-based product}, which generalizes matrix multiplication by summing over shared indices.
+
+The \textbf{direct product}, or tensor product, combines two tensors to produce a higher-rank tensor. Let $T_1 \in \R^{d_1 \times \cdots \times d_k}$ and $T_2 \in \R^{d_{k+1} \times \cdots \times d_{k+m}}$. Their direct product $T_1 \otimes T_2 \in \R^{d_1 \times \cdots \times d_k \times d_{k+1} \times \cdots \times d_{k+m}}$ is defined element-wise as:
+\[
+(T_1 \otimes T_2)_{i_1,\ldots,i_{k+m}} = (T_1)_{i_1,\ldots,i_k} \cdot (T_2)_{i_{k+1},\ldots,i_{k+m}}.
+\]
+
+The \textbf{contraction-based product} reduces the rank of the resulting tensor by summing over one or more shared indices between the input tensors. This operation generalizes the familiar matrix product. For example, if $T_1 \in \R^{d_1 \times d_2 \times d_3}$ and $T_2 \in \R^{d_3 \times d_4}$, contracting the third index of $T_1$ with the first index of $T_2$ gives:
+\[
+T_{i_1,i_2,i_4} = \sum_{i_3=1}^{d_3} (T_1)_{i_1,i_2,i_3} \cdot (T_2)_{i_3,i_4}.
+\]
+
+\begin{example}[Direct Product of Vectors]
+Let $\mathbf{u}$ and $\mathbf{v}$ be two vectors:
+\[
+\mathbf{u} = \begin{pmatrix} 1 \\ 2 \end{pmatrix}, \quad \mathbf{v} = \begin{pmatrix} 3 \\ 4 \end{pmatrix}
+\]
+The direct product (or tensor product) $\mathbf{u} \otimes \mathbf{v}$ results in a higher-dimensional tensor, which in this case is a $2 \times 2$ matrix:
+\[
+\mathbf{u} \otimes \mathbf{v} = \begin{pmatrix} 1 \\ 2 \end{pmatrix} \otimes \begin{pmatrix} 3 \\ 4 \end{pmatrix} = \begin{pmatrix} 1 \cdot 3 & 1 \cdot 4 \\ 2 \cdot 3 & 2 \cdot 4 \end{pmatrix} = \begin{pmatrix} 3 & 4 \\ 6 & 8 \end{pmatrix}
+\]
+\end{example}
+
+\begin{exercise}[Einstein Summation and Computational Efficiency]
+Einstein Summation Notation (ESN) provides a compact, index-based way to express tensor operations, directly translating into efficient GPU kernels. This exercise tests your ability to translate between traditional summation and ESN, and addresses core efficiency concerns in modern deep learning hardware.
+
+\begin{enumerate}
+    \item \textbf{ESN Translation:} Express the following two fundamental operations using Einstein Summation Notation:
+    \begin{enumerate}[(1)]
+        \item The matrix-vector product $\mathbf{y} = A\mathbf{x}$, where $A \in \R^{m \times n}$ and $\mathbf{x} \in \R^n$.
+        \item The squared Frobenius norm of a matrix $A$: $\|A\|_F^2 = \sum_{i=1}^m \sum_{j=1}^n A_{ij}^2$.
+    \end{enumerate}
+    
+    \item \textbf{Contraction Dimensionality:} Given the tensor contraction $C_{ikl} = A_{ij} B_{jkl}$, assuming all dimensions are $D$:
+    \begin{itemize}
+        \item What is the rank (number of indices) of the resulting tensor $C$?
+        \item What is the final dimensionality of $C$ (e.g., $\R^{d_1 \times d_2 \times \ldots}$)?
+    \end{itemize}
+    
+    \item \textbf{Hardware Efficiency:} In GPU programming, why is memory contiguity (how elements are stored and accessed in memory) often more important for overall performance than the theoretical FLoating-point OPeration count (FLOPs)?
+\end{enumerate}
+\end{exercise}
+
+\subsection{Applications in Generative AI -- Mechanics of Transformers}
+
+\subsubsection{Vector Representations and Matrix Transformations in Generative Diffusion Models}
+
+In generative diffusion models, data points are represented as vectors and undergo a sequence of matrix transformations to progressively refine noisy inputs into meaningful outputs, such as generating new images. This iterative de-noising process can be described as:
+\[
+\mathbf{x}_{t+1} = A_t \mathbf{x}_t + \mathbf{b}_t, \quad t = 0, \ldots, T,
+\]
+where:
+\begin{itemize}
+    \item $\mathbf{x}_0$ is the noisy input that initializes the de-noising process.
+    \item $\mathbf{x}_T$ is the final generated image or output.
+    \item $A_t \in \R^{n \times n}$ is a transformation matrix.
+    \item $\mathbf{b}_t \in \R^n$ is a bias term.
+\end{itemize}
+
+The transformation matrix $A_t$ and bias term $\mathbf{b}_t$ are nonlinear functions of $\mathbf{x}_t$ and $t$, often incorporating stochastic components such as Wiener noise and Neural Networks (NNs). These parameters are learned during training to effectively model the complex dynamics of the de-noising process.
+
+\subsubsection{High-Dimensional Feature Interactions with Tensors in Transformers}
+
+The transformer architecture, introduced in 2017 by Vaswani et al.\ in their seminal work ``Attention is All You Need''~\cite{vaswani2017attention}, revolutionized AI by leveraging self-attention mechanisms and feed-forward layers to model complex dependencies across input sequences.
+
+Transformers are foundational in modern generative AI, leveraging tensors to model dependencies across tokens in a sequence. These tokens are processed through a combination of linear tensor operations (index contractions, including convolutions) and nonlinear functions to predict the next token in a sequence.
+
+\textbf{Tokens and Their Role in Sequence Generation:} The input sequence is represented as a matrix $X = \{t_1, t_2, \ldots, t_n\} \in \R^{n \times d}$, where $n$ is the sequence length, $t_i \in \R^d$ is the embedding of the $i$-th token, and $d$ is the embedding dimension. The process of predicting the next token $t_{n+1}$ involves evolving a ``token-to-be-predicted'' vector $\hat{t}_{n+1} \in \R^d$, which stabilizes over iterative applications of the transformer mechanism.
+
+\begin{enumerate}
+    \item \textbf{Embedding and Initialization:} The vector $\hat{t}_{n+1}^{(0)}$ is initialized, typically as the ``average'' of the embeddings:
+    \[
+    \hat{t}_{n+1}^{(0)} = \frac{1}{n} \sum_{i=1}^n t_i, \quad \hat{t}_{n+1}^{(0)} \in \R^d.
+    \]
+    
+    \item \textbf{Attention Mechanism and Update:} The matrix of known tokens $X \in \R^{n \times d}$ interacts with $\hat{t}_{n+1}^{(k)} \in \R^d$ through the self-attention mechanism. At each step $k$, the matrices of queries ($Q$), keys ($K$), and values ($V$) are computed as:
+    \[
+    Q = \hat{t}_{n+1}^{(k)} W_Q, \quad K = XW_K, \quad V = XW_V,
+    \]
+    where $W_Q, W_K, W_V \in \R^{d \times d}$ are learned weight matrices.
+    
+    The attention weights are calculated using the softmax function as:
+    \[
+    \alpha_i^{(k)} = \softmax\left(\frac{Q \cdot K^\top}{\sqrt{d}}\right)_i := \frac{\exp\left(\frac{Q K_{i,:}^\top}{\sqrt{d}}\right)}{\sum_{j=1}^n \exp\left(\frac{Q K_{j,:}^\top}{\sqrt{d}}\right)} \in [0, 1],
+    \]
+    where $K_{i,:}$ denotes the $i$th row of $K$, which is transposed to become the $i$th column of $K^\top$.
+    
+    The aggregated output is obtained by contracting the attention weights with the value vectors:
+    \[
+    \mathbf{z}^{(k)} = \sum_{i=1}^n \alpha_i^{(k)} V_i, \quad \mathbf{z}^{(k)} \in \R^d.
+    \]
+    
+    \item \textbf{Nonlinear Transformation + Normalization:} The aggregated output $\mathbf{z}^{(k)}$ undergoes a nonlinear transformation to update $\hat{t}_{n+1}^{(k)}$:
+    \[
+    \hat{t}_{n+1}^{(k+1)} = \LayerNorm\left(\sigma\left(W_2 \sigma(W_1 \mathbf{z}^{(k)}) + \mathbf{b}\right)\right),
+    \]
+    where $W_1, W_2 \in \R^{d \times d}$ are learned weight matrices, $\mathbf{b} \in \R^d$ is a bias vector, and $\sigma(\cdot)$ is a point-wise activation function, such as Gaussian Error Linear Unit (GELU).
+    
+    Layer Normalization ensures stability during iterations and is defined as:
+    \[
+    \LayerNorm(\mathbf{x}) = \frac{\mathbf{x} - \mu}{\sqrt{\sigma^2 + \epsilon}} \odot \bm{\gamma} + \bm{\beta},
+    \]
+    where $\mu = \frac{1}{d}\sum_{i=1}^d x_i$ is the mean, $\sigma^2 = \frac{1}{d}\sum_{i=1}^d (x_i - \mu)^2$ is the variance, and $\bm{\gamma}, \bm{\beta} \in \R^d$ are learnable parameters.
+    
+    \item \textbf{Multi-Head Attention:} To capture diverse patterns in the input data, transformers employ multi-head attention, which divides the embeddings into multiple subspaces (or heads), allowing the model to focus on different aspects of the data simultaneously.
+    
+    \item \textbf{Convergence and Stabilization:} The iterations in $k$ proceed until $\hat{t}_{n+1}^{(k)}$ converges to a stable vector $\hat{t}_{n+1}(X)$. The stabilized vector is then used to compute the probabilities of the next token over the vocabulary:
+    \[
+    p(t_{n+1}|X) = \softmax(W_{\text{out}} \hat{t}_{n+1}(X) + \mathbf{b}_{\text{out}}),
+    \]
+    where $W_{\text{out}} \in \R^{d \times v}$ projects the embedding to the vocabulary size $v$; and $\mathbf{b}_{\text{out}} \in \R^v$ is bias vector.
+\end{enumerate}
+
+\section{Matrix Decompositions}
+
+\subsection{Singular Value Decomposition}
+
+Singular Value Decomposition (SVD) is a powerful linear algebra technique that can be applied to a batch of data points to extract a reduced-dimensional representation for individual data points. It works by identifying principal directions of variation in the data and allows projecting each data point onto a smaller set of basis vectors while retaining most of the relevant information.
+
+Consider a dataset represented as a matrix $X \in \R^{n \times d}$, where $n$ is the number of data points and $d$ is the dimensionality of each data point. We assume that $n > d$. The Singular Value Decomposition (SVD) of $X$ is given by:
+\[
+X = USV^\top,
+\]
+where:
+\begin{itemize}
+    \item $U \in \R^{n \times n}$ is the left singular matrix, whose columns form an orthonormal basis for the space spanned by the rows of $X$.
+    \item $S \in \R^{n \times d}$ is a diagonal matrix containing the singular values, which indicate the significance of the corresponding directions.
+    \item $V \in \R^{d \times d}$ is the right singular matrix, whose columns form an orthonormal basis for the space spanned by the columns of $X$.
+\end{itemize}
+
+Both $U$ and $V$ are orthogonal matrices, meaning $U^\top = U^{-1}$ and $V^\top = V^{-1}$, and therefore they are invertible.
+
+The key property of the SVD is that the columns of $V$ (right singular vectors) are the eigenvectors of $X^\top X$, and the squares of the singular values $\sigma_i^2$ are the eigenvalues of $X^\top X$:
+\[
+X^\top X = V S^\top S V^\top = V \diag(\sigma_1^2, \ldots, \sigma_d^2) V^\top,
+\]
+where values are conventionally ordered in descending order: $\sigma_1^2 \geq \cdots \geq \sigma_d^2$.
+
+\begin{exercise}[Finding the SVD of a Simple Matrix]
+Find SVD of the matrix:
+\[
+X = \begin{pmatrix}
+1 & 0 & 0 & 0 & 2 \\
+0 & 0 & 3 & 0 & 0 \\
+0 & 0 & 0 & 0 & 0 \\
+0 & 4 & 0 & 0 & 0
+\end{pmatrix}.
+\]
+\end{exercise}
+
+\subsection{Reduced Representation of a Single Data Point with SVD}
+
+Let $X \in \R^{n \times d}$ be a dataset whose rows $\mathbf{x}_i \in \R^d$ represent individual data points. A central goal in data analysis and machine learning is to obtain a low-dimensional representation $\mathbf{z}_i \in \R^k$, with $k \ll d$, such that $\mathbf{z}_i$ preserves the most informative geometric structure of $\mathbf{x}_i$. This is essential in applications involving compression, denoising, and feature extraction.
+
+The Singular Value Decomposition (SVD) of $X$,
+\[
+X = USV^\top,
+\]
+provides a principled way to construct such reduced representations. The columns of $V$ are right singular vectors, representing principal directions of variability in the dataset, while the singular values $\sigma_1 \geq \sigma_2 \geq \cdots$ quantify how much variance is captured in each direction.
+
+To reduce the dimensionality of a single point $\mathbf{x}_i$, we project it onto the top $k$ singular directions:
+\[
+\mathbf{z}_i = \mathbf{x}_i V_k,
+\]
+where $V_k \in \R^{d \times k}$ contains the first $k$ columns of $V$. The reduced vector $\mathbf{z}_i \in \R^k$ captures the dominant features of $\mathbf{x}_i$ while ignoring lower-variance structure.
+
+\subsection{Eigen-Decomposition}
+
+Eigen-Decomposition (ED) is a fundamental matrix factorization technique applicable to square matrices. Given a square matrix $A \in \R^{d \times d}$, eigen-decomposition expresses $A$ in terms of its eigenvalues and eigenvectors. An eigenvalue-eigenvector pair $(\lambda, \mathbf{v})$ satisfies the equation:
+\[
+A\mathbf{v} = \lambda \mathbf{v},
+\]
+where $\lambda \in \C$ is the eigenvalue, and $\mathbf{v} \in \C^d$ is the corresponding eigenvector. The eigenvectors represent directions that remain invariant under the linear transformation defined by $A$, and the eigenvalues describe the scaling along these directions.
+
+For diagonalizable matrices, ED expresses $A$ as:
+\[
+A = Q \Lambda Q^{-1},
+\]
+where $Q \in \C^{d \times d}$ contains the eigenvectors of $A$ as columns, and $\Lambda \in \C^{d \times d}$ is a diagonal matrix with the eigenvalues of $A$ on its diagonal.
+
+\subsection{Connecting SVD and ED for Symmetric Positive-Definite Matrices}
+
+The relationship between SVD and ED becomes apparent when considering symmetric positive-definite matrices, such as the covariance matrix of a dataset: $\Sigma = \frac{1}{n} X^\top X$. The covariance matrix $\Sigma \in \R^{d \times d}$ is symmetric and positive semi-definite. Eigen-decomposition of $\Sigma$ yields:
+\[
+\Sigma = V \Lambda V^\top,
+\]
+where $V$ contains the eigenvectors of $\Sigma$ (the principal directions of the data), and $\Lambda$ contains the eigenvalues of $\Sigma$ (the variance explained by each principal direction).
+
+For symmetric positive-definite matrices, the eigenvalues in $\Lambda$ are equivalent to the squared singular values from the SVD of $X$. Thus, for such matrices:
+\[
+\Sigma = V S^2 V^\top,
+\]
+establishing that SVD and ED are closely related.
+
+%========================================
+% CHAPTER 2: CALCULUS AND DIFFERENTIAL EQUATIONS
+%========================================
+\chapter{Calculus and Differential Equations (in AI)}
+
+\section{Automatic Differentiation}
+
+Automatic differentiation (AD) is the backbone of modern scientific computing and machine learning. Its central idea is simple but powerful: a complex function is nothing more than a composition of elementary operations, and the chain rule can be applied systematically and efficiently. AD differs from symbolic differentiation (which often produces large expressions) and from numerical finite differences (which suffer from truncation and rounding errors). Instead, AD evaluates derivatives exactly up to machine precision while keeping the computational cost controlled.
+
+Today, AD powers all major deep-learning frameworks, including PyTorch, TensorFlow, and JAX. In this section we introduce the core principles of AD, illustrate them through a computational graph for a simple multivariate function, and then show how modern AD systems compute gradients efficiently in practice.
+
+\begin{example}[Decomposing a Function into a Directed Acyclic Graph]
+Consider the scalar function
+\[
+f(x_1, x_2) = \frac{\sin(x_1 + x_2)}{x_1}.
+\]
+To expose AD's structure, we rewrite the computation as a sequence of elementary operations:
+\[
+w_1 = x_1, \quad w_2 = x_2, \quad w_3 = w_1 + w_2, \quad w_4 = \sin(w_3), \quad w_5 = \frac{w_4}{w_1}.
+\]
+These steps form a Directed Acyclic Graph (DAG), also called a computational graph. Each node carries a value computed from its parents, while each edge encodes the dependency structure.
+\end{example}
+
+\subsection{Forward vs.\ Reverse Mode AD}
+
+The computational graph highlights the two fundamental modes of automatic differentiation. Both modes apply the chain rule locally along the graph, but they differ in the direction in which derivatives are propagated, and therefore in their computational costs.
+
+\textbf{Forward Mode} (many inputs $\to$ few outputs). Forward mode propagates differentials with the computational graph---from inputs toward the output. This makes it efficient when:
+\[
+(\text{\# of inputs}) \ll (\text{\# of outputs}).
+\]
+
+\textbf{Reverse Mode} (one or few outputs $\to$ many inputs). Reverse mode propagates sensitivities against the graph---from the (often scalar) output back to all inputs. This is dramatically more efficient when:
+\[
+(\text{\# of outputs}) \ll (\text{\# of inputs}).
+\]
+This is the case when training neural networks, where the loss is a scalar and the number of parameters ranges from millions to tens of billions. Reverse mode therefore underlies \textbf{backpropagation}.
+
+\textbf{Forward vs.\ Reverse: summary of complexity.} Let $n = \#\text{inputs}$ and $m = \#\text{outputs}$. Then:
+\[
+\text{Forward mode cost} \sim O(n), \quad \text{Reverse mode cost} \sim O(m).
+\]
+
+\section{Differential Equations: Foundations and Links to AI}
+
+Following our exploration of Automatic Differentiation, which provides the instantaneous rate of change (the gradient), we now turn to Differential Equations -- the language used to describe change and dynamics over time.
+
+\subsection{Ordinary Differential Equations (ODEs) -- Primer}
+
+An Ordinary Differential Equation (ODE) is an equation involving derivatives of a function with respect to a single independent variable:
+\[
+\frac{d\mathbf{x}}{dt} = f(\mathbf{x}, t), \quad \mathbf{x} \in \R^n, \quad t \in \R.
+\]
+
+Often, a shorthand notation is used where $\dot{\mathbf{x}}$ represents $\frac{d\mathbf{x}}{dt}$.
+
+ODEs play a crucial role in modeling time-dependent phenomena across science and engineering, including motion, heat transfer, and population dynamics.
+
+\subsubsection{Integration: The Simplest Case $\dot{x} = f(t)$}
+
+Let us begin with the simplest case where $n = 1$ and the right-hand side $f$ does not depend on $x$. In this case, the equation becomes:
+\[
+\frac{dx}{dt} = f(t).
+\]
+Integrating this equation gives the symbolic solution:
+\[
+x(t) = \int f(t) \, dt + \text{const}.
+\]
+
+\begin{exercise}
+Consider two ``integrable'' examples:
+\[
+\frac{dx}{dt} = \begin{cases}
+\sin(at), & \text{(I)}; \\
+\exp(at), & \text{(II)},
+\end{cases}
+\]
+where $a \in \R$.
+
+\begin{enumerate}
+    \item Solve these ODEs analytically, fixing the integration constant such that $x(0) = x_0$.
+    \item Analyze the asymptotic behavior of the solutions as $t \to +\infty$, considering the dependence on the initial condition $x_0$ and the parameter $a$. Does the solution grow, decay, or remain bounded?
+\end{enumerate}
+\end{exercise}
+
+\subsection{Second-Order ODE}
+
+The concepts of order (with respect to derivatives) and dimensionality of the state space $n$ are interrelated and can often be traded off. Let us illustrate this with a second-order one-dimensional ODE:
+\[
+\frac{d^2 x}{dt^2} + \gamma \frac{dx}{dt} + f(x) = 0, \quad x(t) \in \R.
+\]
+
+By introducing a two-dimensional state variable $\mathbf{y}(t) = (x(t), \dot{x}(t))$, where $\dot{x}(t) = \frac{dx}{dt}$, the second-order ODE can be rewritten as a system of first-order ODEs:
+\[
+\frac{d\mathbf{y}}{dt} = \frac{d}{dt} \begin{pmatrix} y_1 \\ y_2 \end{pmatrix} = \begin{pmatrix} y_2 \\ -\gamma y_2 - f(y_1) \end{pmatrix}.
+\]
+
+If we choose $f(x) = \omega^2 x$, the equation becomes:
+\[
+\frac{d^2 x}{dt^2} + \gamma \frac{dx}{dt} + \omega^2 x = 0,
+\]
+which describes the dynamics of a \textbf{damped harmonic oscillator}.
+
+\subsubsection{Solving the Damped Harmonic Oscillator}
+
+Assume a solution of the form $x(t) = e^{\lambda t}$. Substituting into the equation gives the characteristic equation:
+\[
+\lambda^2 + \gamma \lambda + \omega^2 = 0.
+\]
+The roots are:
+\[
+\lambda_{1,2} = -\frac{\gamma}{2} \pm \sqrt{\frac{\gamma^2}{4} - \omega^2}.
+\]
+
+The nature of the solution depends on the discriminant $\Delta = \frac{\gamma^2}{4} - \omega^2$:
+\begin{itemize}
+    \item \textbf{Over-damped Case} ($\Delta > 0$): The roots $\lambda_{1,2}$ are real and distinct. The motion decays monotonically without oscillations.
+    \item \textbf{Critically Damped Case} ($\Delta = 0$): The roots $\lambda_{1,2}$ are real and equal. This represents the fastest decay to equilibrium without oscillation.
+    \item \textbf{Under-damped Case} ($\Delta < 0$): The roots $\lambda_{1,2}$ are complex conjugates, leading to an oscillatory solution.
+\end{itemize}
+
+\section{System of Linear ODEs}
+
+\subsection{Homogeneous ODEs}
+
+We aim to solve a system of linear Ordinary Differential Equations (ODEs) that describes the time evolution of the vector $\mathbf{x} \in \R^n$:
+\[
+\frac{d\mathbf{x}}{dt} = A\mathbf{x},
+\]
+where $A \in \R^{n \times n}$ is a fixed, time-independent matrix, subject to the initial condition $\mathbf{x}(0) = \mathbf{x}_0$.
+
+When $n = 1$, $A$ is a scalar, and the solution is straightforward:
+\[
+x(t) = \exp(tA) x_0.
+\]
+
+Remarkably, this solution generalizes to the case of $n > 1$, where $\exp(tA)$ is the \textbf{matrix exponential}, defined as:
+\[
+\exp(tA) = \sum_{k=0}^{\infty} \frac{(tA)^k}{k!}.
+\]
+
+The series converges for any finite-dimensional square matrix $A$, ensuring the matrix exponential is well-defined.
+
+\begin{exercise}[Properties of the Matrix Exponential]
+Prove that:
+\begin{enumerate}
+    \item If $AB - BA = 0$, then $\exp(A + B) = \exp(A) \exp(B) = \exp(B) \exp(A)$.
+    \item If $\det(P) \neq 0$, then $\exp(P A P^{-1}) = P \exp(A) P^{-1}$.
+    \item $\det(\exp(A)) = \exp(\tr(A))$. In your proof, you may assume that $A$ is diagonalizable.
+\end{enumerate}
+\end{exercise}
+
+\subsection{Inhomogeneous ODEs}
+
+Now consider the generalization to an inhomogeneous system:
+\[
+\frac{d\mathbf{x}}{dt} = A\mathbf{x} + \mathbf{b}(t),
+\]
+where $\mathbf{b}(t) \in \R^n$ is a time-dependent vector. The solution is:
+\[
+\mathbf{x}(t) = \exp(tA)\mathbf{x}_0 + \int_0^t \exp\left((t - \tau)A\right) \mathbf{b}(\tau) \, d\tau,
+\]
+where the first term solves the homogeneous equation, and the second term accounts for the inhomogeneous component.
+
+\textbf{Case of Constant $\mathbf{b}$:} If $\mathbf{b}(t) = \mathbf{b}$ is constant, the time-dependent integral simplifies, resulting in the algebraic expression:
+\[
+\mathbf{x}(t) = \exp(tA)\mathbf{x}_0 + A^{-1}\left(\exp(tA) - I\right)\mathbf{b},
+\]
+which expresses the solution using elementary matrix functions (exponential and inverse).
+
+\subsection{Time-Ordered Exponential}
+
+Let us now discuss the solution of $\dot{\mathbf{x}} = A\mathbf{x}$, where $\mathbf{x} \in \R^n$ and $A(t) \in \R^{n \times n}$, in the case where $A = A(t)$ is time-dependent.
+
+For $n = 1$, the solution is straightforward: the matrix exponential $\exp(tA)$ is replaced by $\exp\left(\int_0^t A(t') \, dt'\right)$.
+
+However, for $n > 1$, this expression is incorrect in general when the matrix function $A(t)$ evaluated at two different moments of time, $t_1$ and $t_2$, do not commute. To account for this matrix non-commutativity, we replace the matrix exponential with the so-called \textbf{time-ordered exponential}:
+\begin{align}
+\mathcal{T} \exp\left(\int_0^t A(t') \, dt'\right) &= I + \int_0^t A(t_1) \, dt_1 + \int_0^t \int_0^{t_1} A(t_1)A(t_2) \, dt_2 \, dt_1 + \cdots \notag \\
+&= \sum_{n=0}^{\infty} \int_0^t \cdots \int_0^{t_{n-1}} A(t_1) A(t_2) \cdots A(t_n) \, dt_n \cdots dt_1,
+\end{align}
+where $\mathcal{T}$ indicates time-ordering, ensuring that matrices $A(t_1), A(t_2), \ldots$ are multiplied in the correct chronological order, with earlier times appearing to the right.
+
+%========================================
+% CHAPTER 3: OPTIMIZATION
+%========================================
+\chapter{Optimization (in AI)}
+
+\section{Overview}
+
+Optimization underpins most advances in Artificial Intelligence (AI). Whether training a Neural Network (NN), fine-tuning a transformer, or building a generative diffusion model, optimization is at the heart of creating, training, and performing inference with these models.
+
+AI workflows involve three major stages:
+\begin{enumerate}
+    \item \textbf{Model Creation:} Formulating the model structure and the optimization problem.
+    \item \textbf{Training:} Optimizing over parameters of the model using a fixed dataset.
+    \item \textbf{Inference:} Finding optimal states or predictions with parameters already fixed/trained.
+\end{enumerate}
+
+Modern state-of-the-art AI models often contain billions or even trillions of parameters (of the underlying neural networks), making scalability and efficiency critical. This is why optimization methods in AI primarily focus on:
+\begin{itemize}
+    \item \textbf{Continuous Spaces:} Most models have continuous parameters.
+    \item \textbf{Single-Objective Optimization:} Only one objective (e.g., minimizing loss) is considered.
+    \item \textbf{First-Order Methods:} Gradients (but not second derivatives) are used to ensure scalability.
+    \item \textbf{Unconstrained Settings:} Constraints are avoided or incorporated via Lagrange multipliers.
+\end{itemize}
+
+\section{Starting Example --- Logistic Regression}
+
+Optimization is at the core of modern AI. Virtually every supervised-learning task -- from logistic regression to large-scale deep learning -- requires adjusting model parameters to minimize a loss function computed over a dataset. For a Neural Network (NN) $f_\theta(\mathbf{x})$, the standard learning problem takes the form
+\[
+\theta^* = \arg\min_\theta \frac{1}{N} \sum_{i=1}^N L\left(f_\theta(\mathbf{x}_i), y_i\right),
+\]
+where $\{(\mathbf{x}_i, y_i)\}_{i=1}^N$ is the dataset, $L$ is a loss (e.g., MSE or cross-entropy), and $\theta$ are the parameters to be optimized.
+
+\subsection{The Logistic Regression Model}
+
+In its simplest 2D form, logistic regression has parameters $\bm{\omega} = (b, \omega_1, \omega_2)$, and predicts the probability of class $y = 1$ via
+\[
+\hat{y}_{\text{LR}}(\mathbf{x}, \bm{\omega}) = \sigma(b + \omega_1 x_1 + \omega_2 x_2), \quad \sigma(z) = \frac{1}{1 + e^{-z}},
+\]
+where $\mathbf{x} = (x_1, x_2) \in \R^2$ and $\sigma$ is the sigmoid activation function.
+
+Given labeled samples $\{(\mathbf{x}_i, y_i)\}_{i=1}^N$, the parameters are estimated by solving
+\[
+\bm{\omega}^* = \arg\min_{\bm{\omega}} \frac{1}{N} \sum_{i=1}^N L_{\text{LR}}(\mathbf{x}_i, y_i, \bm{\omega}),
+\]
+with the \textbf{binary cross-entropy loss}
+\[
+L_{\text{LR}}(\mathbf{x}_i, y_i, \bm{\omega}) = -\left[y_i \log \hat{y}_{\text{LR}}(\mathbf{x}_i, \bm{\omega}) + (1 - y_i) \log(1 - \hat{y}_{\text{LR}}(\mathbf{x}_i, \bm{\omega}))\right].
+\]
+
+\section{Convex Optimization -- Primer}
+
+Although AI optimization problems are generally non-convex, convexity is central to understanding how and why optimization works.
+
+\textbf{Convex Functions.} A function $f : \R^n \to \R$ is convex if
+\[
+f(\alpha \mathbf{x} + (1 - \alpha)\mathbf{y}) \leq \alpha f(\mathbf{x}) + (1 - \alpha) f(\mathbf{y}), \quad \forall \mathbf{x}, \mathbf{y}, \quad \alpha \in [0, 1].
+\]
+Convexity ensures that every local minimum is global.
+
+\textbf{Strict Convexity.} If the inequality is strict for $\mathbf{x} \neq \mathbf{y}$, the minimizer is unique.
+
+\textbf{Second-Order Characterization.} A twice differentiable function is convex iff its Hessian is positive semi-definite:
+\[
+\mathbf{v}^\top H_f(\mathbf{x}) \mathbf{v} \geq 0 \quad \forall \mathbf{v}.
+\]
+If the Hessian is positive definite, the function is strictly convex.
+
+\section{Gradient Descent and Its Essential AI Variants}
+
+Gradient descent is the backbone of optimization in AI, enabling efficient model training by minimizing loss functions.
+
+\subsection{Gradient Descent (GD)}
+
+Gradient Descent (GD) iteratively updates the vector of parameters $\theta_t$ in discrete time, $t = 0, \cdots$, based on the negative gradient of the loss function over $\theta_t$:
+\[
+\theta_{t+1} = \theta_t - \eta \nabla_{\theta_t} \sum_{i=1}^N L(\mathbf{x}_i, \theta_t),
+\]
+where $(\mathbf{x}_i \mid i = 1, \cdots, N)$ is the Ground Truth (GT) data set with $N$ samples.
+
+For a convex and $L$-smooth function, GD converges at a rate of $O(1/T)$ for general convex functions and $O(1/T^2)$ for strongly convex functions with an optimal step size $\eta$.
+
+\subsection{Stochastic Gradient Descent (SGD)}
+
+SGD approximates GD by computing noisy gradient estimates over randomly chosen batches:
+\[
+\theta_{t+1} = \theta_t - \eta \nabla_{\theta_t} \sum_{i \in \text{batch}} L(\mathbf{x}_i, \theta_t),
+\]
+where batch is updated frequently (possibly at each iteration step) at random. SGD reduces per-iteration computational cost and enables large-scale learning but converges at a slower rate of $O(1/\sqrt{T})$ in expectation.
+
+\subsection{Momentum-Based Methods}
+
+Momentum methods incorporate past increments to accelerate convergence by simulating the behavior of a dynamical system with inertia. The classical \textbf{Polyak Heavy-Ball Method} (Polyak, 1964) follows the update rule:
+\[
+\theta_{t+1} = \theta_t + \beta(\theta_t - \theta_{t-1}) - \eta \nabla_{\theta_t} \sum_i L(\mathbf{x}_i, \theta_t),
+\]
+where $\beta$ is the momentum coefficient.
+
+\textbf{Nesterov} (1983) introduced an accelerated momentum-based method:
+\[
+\theta_{t+1} = \theta_t + \beta(\theta_t - \theta_{t-1}) - \eta \nabla_{\theta_t} \sum_i L\left(\mathbf{x}_i, \theta_t + \beta(\theta_t - \theta_{t-1})\right),
+\]
+where the key difference is that the gradient is evaluated at an anticipated point $\theta_t + \beta(\theta_t - \theta_{t-1})$, rather than at $\theta_t$.
+
+\subsection{Adaptive Learning Rate Methods}
+
+Optimization methods with adaptive learning rates dynamically adjust step sizes based on past gradient information.
+
+\textbf{AdaGrad} (Adaptive Gradient Algorithm) modifies standard gradient descent by assigning each parameter $\theta_\alpha$ its own time-dependent learning rate:
+\[
+\eta_\alpha^{(t)} = \frac{\eta}{\sqrt{G_\alpha^{(t)} + \epsilon}}, \quad G_\alpha^{(t)} = \sum_{t'=1}^t \left(\frac{\partial}{\partial \theta_\alpha^{(t')}} \sum_i L(\mathbf{x}_i, \theta^{(t')})\right)^2.
+\]
+
+\textbf{RMSProp} (Root Mean Square Propagation) mitigates AdaGrad's diminishing-step-size problem by replacing the cumulative sum with an exponentially decaying moving average:
+\[
+G_\alpha^{(t+1)} = \beta G_\alpha^{(t)} + (1 - \beta) \left(\frac{\partial}{\partial \theta_\alpha^{(t)}} \sum_i L(\mathbf{x}_i, \theta^{(t)})\right)^2.
+\]
+
+\textbf{Adam} (Adaptive Moment Estimation) combines the ideas of AdaGrad and RMSProp with momentum by tracking both first and second moments of the gradient:
+\begin{align}
+m_\alpha^{(t+1)} &= \beta_1 m_\alpha^{(t)} + (1 - \beta_1) \frac{\partial}{\partial \theta_\alpha^{(t)}} \sum_i L(\mathbf{x}_i, \theta^{(t)}), \\
+G_\alpha^{(t+1)} &= \beta_2 G_\alpha^{(t)} + (1 - \beta_2) \left(\frac{\partial}{\partial \theta_\alpha^{(t)}} \sum_i L(\mathbf{x}_i, \theta^{(t)})\right)^2, \\
+\hat{m}_\alpha^{(t+1)} &= \frac{m_\alpha^{(t+1)}}{1 - \beta_1^t}, \quad \hat{G}_\alpha^{(t+1)} = \frac{G_\alpha^{(t+1)}}{1 - \beta_2^t}, \\
+\theta_\alpha^{(t+1)} &= \theta_\alpha^{(t)} - \eta \frac{\hat{m}_\alpha^{(t+1)}}{\sqrt{\hat{G}_\alpha^{(t+1)} + \epsilon}}.
+\end{align}
+
+Adam has become the de-facto standard optimizer in deep learning due to its fast empirical convergence, robustness to hyperparameter choices, and efficiency in stochastic settings.
+
+\section{Regularization \& Sparsity}
+
+\subsection{Compressed Sensing and Sparse Optimization}
+
+Compressed sensing (CS) is a paradigm that exploits the fact that many high-dimensional signals and datasets have an underlying sparse structure. The fundamental insight is that under-determined linear systems, which appear to be ill-posed, can still be solved uniquely when the true solution is sparse.
+
+Consider an underdetermined system:
+\[
+A\mathbf{x} = \mathbf{b}, \quad A \in \R^{m \times n}, \quad m \ll n.
+\]
+
+The system has infinitely many solutions unless additional constraints are imposed. If we know that $\mathbf{x}$ is sparse, meaning that only a few of its components are nonzero, we can attempt to recover it by solving:
+\[
+\min_{\mathbf{x}} \|\mathbf{x}\|_0 \quad \text{s.t.} \quad A\mathbf{x} = \mathbf{b},
+\]
+where $\|\mathbf{x}\|_0$ is the $\ell_0$ ``norm'' -- the number of nonzero entries.
+
+However, this $\ell_0$ minimization problem is combinatorial and computationally intractable. A major breakthrough in compressed sensing is that relaxing $\ell_0$ to $\ell_1$ norm leads to a convex optimization problem, which can be solved efficiently:
+\[
+\min_{\mathbf{x}} \sum_{i=1}^n |x_i| \quad \text{s.t.} \quad A\mathbf{x} = \mathbf{b}.
+\]
+
+This reformulation can be efficiently solved using Linear Programming (LP), linking sparsity to convex optimization techniques.
+
+%========================================
+% CHAPTER 4: NEURAL NETWORKS
+%========================================
+\chapter{Neural Networks \& Deep Learning}
+
+\section{Neural Network Mechanics}
+
+In this section, we move from the abstract optimization and dynamical-systems viewpoints of Chapters 1--3 to the concrete mechanics of Neural Networks (NNs). Our focus is on how relatively simple and compact NNs can be used as flexible function approximators for supervised learning, and on how their parameters are trained by gradient-based methods.
+
+\subsection{Perceptron -- Historical Remark}
+
+We begin with the simplest single-layer architecture (with no hidden layers) and one of the earliest artificial NN models -- the \textbf{Perceptron}, introduced by Frank Rosenblatt in 1958. The name ``Perceptron'' reflects its biologically inspired design: Rosenblatt aimed to develop a mathematical model that mimicked, in highly simplified form, how neurons in the brain perceive and process information.
+
+A perceptron takes an input vector $\mathbf{x} \in \R^d$, computes a linear score $\mathbf{w}^\top \mathbf{x} + b$, and then applies a threshold nonlinearity to decide between two classes:
+\[
+\hat{y} = \sign(\mathbf{w}^\top \mathbf{x} + b).
+\]
+
+Despite its historical importance, the perceptron has a major limitation: it can only learn linearly separable problems. In their seminal work, Minsky and Papert (1969) showed that a single-layer perceptron \textbf{cannot solve linearly non-separable problems}, such as the XOR problem.
+
+\subsection{NN with a Single Fully Connected Hidden Layer}
+
+The simplest architecture that exhibits the power of learned representations is a single-hidden-layer, fully connected neural network.
+
+Both logistic regression with nonlinear features and a neural network with a hidden layer can be viewed as:
+\begin{itemize}
+    \item compositions of linear maps (matrices) and nonlinearities (activation functions),
+    \item trained by gradient-based optimization of a loss function (typically cross-entropy),
+    \item but differing in whether the feature map is hand-designed or learned.
+\end{itemize}
+
+\subsection{Simple Convolutional Neural Network}
+
+The fully connected NN layer is deliberately structure-agnostic: it treats all input coordinates as unrelated. In many practical settings, however, we do know something about the structure of the data. For images, it is natural to assume that nearby pixels are more strongly related than distant ones, and that the same local pattern may appear anywhere in the image.
+
+\textbf{Convolutional Neural Networks (CNNs)} exploit exactly this kind of prior structure:
+\begin{itemize}
+    \item They connect each neuron only to a local receptive field in the previous layer, enforcing \textbf{locality}.
+    \item They reuse the same filter weights across all locations, implementing \textbf{weight sharing} and a form of translation equivariance.
+\end{itemize}
+
+\textbf{Network construction (architecture).} Consider an input image $\mathbf{x} \in \R^{H \times W \times C}$ with height $H$, width $W$, and $C$ channels (for MNIST, $H = W = 28$, $C = 1$). A single convolutional layer with $K$ filters $F_k \in \R^{f \times f \times C}$ produces $K$ feature maps $\mathbf{z}_k \in \R^{H \times W}$ via
+\[
+z_k(i, j) = \sigma\left(\sum_{m=0}^{f-1} \sum_{n=0}^{f-1} \sum_{c=1}^C x_c(i + m, j + n) F_k(m, n, c) + b_k\right), \quad k = 1, \ldots, K,
+\]
+where $\sigma(\cdot)$ is a point-wise nonlinearity (e.g., ReLU) and $b_k$ is a bias term.
+
+A typical CNN block alternates:
+\begin{itemize}
+    \item \textbf{Convolution + nonlinearity:} local feature extraction with shared parameters.
+    \item \textbf{Pooling} (e.g., max pooling): local down-sampling that reduces spatial resolution while keeping the number of channels.
+\end{itemize}
+
+\section{Neural Architectures}
+
+\subsection{From CNN to ResNet -- the Power of Skip Connections}
+
+The step from a plain CNN to a ResNet may look minor architecturally, but it has had a major impact on practice. The key idea is to make each layer (or block) learn a \textbf{residual correction} on top of an identity map, rather than a full transformation from scratch.
+
+A basic \textbf{Residual Block (RB)} in a ResNet consists, schematically, of two convolutional layers plus an identity (skip) connection:
+\[
+\text{RB}(\mathbf{x}) = \sigma\left(\text{BN}\left(F_2\left(\sigma(\text{BN}(F_1(\mathbf{x})))\right)\right) + \mathbf{x}\right),
+\]
+where $F_1$ and $F_2$ are convolutional layers, $\text{BN}(\cdot)$ is batch normalization, $\sigma(\cdot)$ is a pointwise nonlinearity (e.g.\ ReLU), and the skip connection is the additive $+\mathbf{x}$ term.
+
+\textbf{Continuous-depth perspective and ODE analogy.} A residual block applies an update of the form
+\[
+\mathbf{h}_{t+1} = \mathbf{h}_t + f(\mathbf{h}_t, \theta_t),
+\]
+which is precisely the forward Euler discretization of the ODE
+\[
+\frac{d\mathbf{h}(t)}{dt} = f(\mathbf{h}(t), \theta(t)).
+\]
+
+In other words, each block performs a small step in feature space, starting from $\mathbf{h}_t$ and moving to $\mathbf{h}_t + f(\mathbf{h}_t, \theta_t)$.
+
+\subsection{From Residual Networks to Neural ODEs}
+
+The \textbf{Neural ODE} viewpoint replaces the discrete stack of residual blocks by a continuous-depth evolution:
+\[
+\frac{d\mathbf{h}(t)}{dt} = f_\theta(\mathbf{h}(t)), \quad \mathbf{h}(0) = \mathbf{h}_0,
+\]
+with $t$ playing the role of (continuous) depth, $\mathbf{h}(t)$ is the feature representation at depth $t$, and $\theta$ collects layer parameters.
+
+In practice, one chooses a parameterized vector field $f_\theta : \R^d \to \R^d$ and solves the ODE with a standard ODE integrator. The key algorithmic idea of Neural ODEs is to differentiate through the solver in order to back-propagate from a loss defined at the terminal time $T$ back to the parameters $\theta$.
+
+\section{Universal Geometric Principles of Deep Learning}
+
+\subsection{Discovery of Flat Regions in the Energy Landscape}
+
+The geometry of the loss landscape plays a critical role in determining a model's generalization ability. Stochastic Gradient Descent (SGD) tends to converge to \textbf{flat regions} in the energy landscape, which correspond to solutions that are robust to small perturbations in the data or model parameters. Flat minima are associated with better generalization, while sharp minima often lead to overfitting.
+
+\subsection{Dynamic Selection of Low-Dimensional Manifolds in Deep Networks}
+
+A recurring theme in modern deep learning is that, despite operating in extremely high-dimensional parameter and activation spaces, neural networks implicitly restrict their computations to low-dimensional manifolds. Empirical and theoretical studies suggest that during training, networks organize data into structured, low-rank representations, effectively using only a small subset of the available degrees of freedom.
+
+%========================================
+% CHAPTER 5: PROBABILITY AND STATISTICS
+%========================================
+\chapter{Probability and Statistics}
+
+\section{Primer for Probability Spaces \& Random Variables}
+
+Probability provides the mathematical language for uncertainty. All models used in modern AI -- from simple classifiers to deep generative models such as VAEs, GANs, Diffusion Models, and Transformers -- manipulate or transform probability distributions in one form or another.
+
+\subsection{Probability Spaces: The Foundation}
+
+A probability space formalizes randomness through a triple
+\[
+(\Omega, \mathcal{F}, P),
+\]
+where:
+\begin{itemize}
+    \item $\Omega$ is the \textbf{sample space} -- the set of all possible outcomes.
+    \item $\mathcal{F}$ is a $\sigma$-algebra of subsets of $\Omega$ whose elements are called events.
+    \item $P : \mathcal{F} \to [0, 1]$ is a \textbf{probability measure} satisfying the Kolmogorov axioms:
+    \[
+    P(\Omega) = 1, \quad P(A) \geq 0, \quad P(A \cup B) = P(A) + P(B) \text{ if } A \cap B = \emptyset.
+    \]
+\end{itemize}
+
+\begin{example}[Coin Toss]
+For a single fair-coin toss:
+\[
+\Omega = \{\text{Head}, \text{Tail}\}, \quad \mathcal{F} = 2^\Omega = \{\emptyset, \{\text{Head}\}, \{\text{Tail}\}, \Omega\},
+\]
+and
+\[
+P(\text{Head}) = P(\text{Tail}) = \frac{1}{2}, \quad P(\emptyset) = 0, \quad P(\Omega) = 1.
+\]
+\end{example}
+
+\subsection{Random Variables}
+
+A \textbf{Random Variable (RV)} is a measurable function
+\[
+X : \Omega \to \R,
+\]
+assigning a numerical value to each outcome.
+
+Random variables may be:
+\begin{itemize}
+    \item \textbf{Discrete:} e.g., outcomes of a die, coin flips, syndrome bits in decoding.
+    \item \textbf{Continuous:} e.g., Gaussian noise injected into a neural network layer.
+\end{itemize}
+
+\textbf{Notation.} Uppercase letters denote random variables ($X, Y$), lowercase letters denote realizations ($x, y$). We write $P_X(x) = P(X = x)$ for Probability Mass Function (PMF) of discrete RVs and $p_X(x)$ for Probability Density Functions (PDFs) of continuous RVs.
+
+The \textbf{Cumulative Distribution Function (CDF)} of $X$ is
+\[
+F_X(x) = P(X \leq x).
+\]
+
+\subsection{Expectation and Moments}
+
+The \textbf{expectation} of $X$ is
+\[
+\E[X] = \begin{cases}
+\sum_x x P_X(x), & \text{discrete}, \\
+\int_{-\infty}^\infty x p_X(x) \, dx, & \text{continuous}.
+\end{cases}
+\]
+
+More generally, the $n$-th moment is $\E[X^n]$, and the \textbf{variance} is
+\[
+\Var(X) = \E[X^2] - (\E[X])^2.
+\]
+
+The \textbf{Moment Generating Function (MGF)}
+\[
+M_X(t) = \E[e^{tX}]
+\]
+encodes all moments through differentiation:
+\[
+\E[X^n] = \left.\frac{d^n}{dt^n} M_X(t)\right|_{t=0}.
+\]
+
+\section{Transforming Probability Distributions}
+
+\subsection{Change of Variables in One Dimension}
+
+Suppose $X$ is a continuous random variable with PDF $p_X(x)$ and $Y = g(X)$ for some smooth, monotonic transformation $g$. Then the PDF of $Y$ is
+\[
+p_Y(y) = p_X(g^{-1}(y)) \left|\frac{d}{dy} g^{-1}(y)\right|.
+\]
+
+This formula is foundational for \textbf{normalizing flows}, where a simple base distribution (e.g., Gaussian) is transformed through a sequence of invertible maps to model complex data distributions.
+
+\subsection{From Gaussian to Arbitrary Distributions: Normalizing Flows}
+
+Normalizing flows are a class of generative models that transform a simple base distribution $p_Z(\mathbf{z})$ (typically a standard Gaussian) into a complex target distribution $p_X(\mathbf{x})$ through a sequence of invertible transformations $g_i$:
+\[
+\mathbf{x} = g_K \circ g_{K-1} \circ \cdots \circ g_1(\mathbf{z}).
+\]
+
+The log-probability of $\mathbf{x}$ can be computed exactly using the change-of-variables formula:
+\[
+\log p_X(\mathbf{x}) = \log p_Z(\mathbf{z}) - \sum_{i=1}^K \log\left|\det\frac{\partial g_i}{\partial \mathbf{z}_{i-1}}\right|.
+\]
+
+\section{Multivariate Random Variables}
+
+\subsection{Random Vectors, Joint Distributions, and Independence}
+
+A \textbf{random vector} $\mathbf{X} = (X_1, \ldots, X_d)^\top$ is a vector-valued random variable. Its \textbf{joint distribution} is described by either a joint PMF or joint PDF $p_{\mathbf{X}}(\mathbf{x})$.
+
+Random variables $X_1, \ldots, X_d$ are \textbf{independent} if
+\[
+p_{\mathbf{X}}(\mathbf{x}) = \prod_{i=1}^d p_{X_i}(x_i).
+\]
+
+\subsection{Multivariate Gaussian Distributions}
+
+A random vector $\mathbf{X} \in \R^d$ follows a \textbf{multivariate Gaussian distribution} $\mathcal{N}(\bm{\mu}, \Sigma)$ if its PDF is
+\[
+p_{\mathbf{X}}(\mathbf{x}) = \frac{1}{(2\pi)^{d/2} |\Sigma|^{1/2}} \exp\left(-\frac{1}{2}(\mathbf{x} - \bm{\mu})^\top \Sigma^{-1} (\mathbf{x} - \bm{\mu})\right),
+\]
+where $\bm{\mu} \in \R^d$ is the mean vector and $\Sigma \in \R^{d \times d}$ is the positive-definite covariance matrix.
+
+Key properties:
+\begin{itemize}
+    \item Marginals and conditionals of a multivariate Gaussian are also Gaussian.
+    \item Linear transformations of Gaussian random vectors remain Gaussian.
+    \item The covariance matrix $\Sigma$ encodes the pairwise linear dependencies between components.
+\end{itemize}
+
+\section{From Aggregate Behavior to Rare Events}
+
+\subsection{The Central Limit Theorem: Weak Form}
+
+The \textbf{Central Limit Theorem (CLT)} states that the sum of $n$ independent, identically distributed (i.i.d.) random variables with finite mean $\mu$ and variance $\sigma^2$ converges in distribution to a Gaussian:
+\[
+\frac{1}{\sqrt{n}} \sum_{i=1}^n (X_i - \mu) \xrightarrow{d} \mathcal{N}(0, \sigma^2) \quad \text{as } n \to \infty.
+\]
+
+This remarkable result explains why Gaussian distributions appear so frequently in nature and statistical modeling: any quantity that results from the aggregation of many small, independent effects tends toward Gaussian behavior.
+
+\subsection{Large Deviations: Tail Form of the CLT}
+
+While the CLT describes typical fluctuations around the mean, \textbf{large deviation theory} quantifies the probability of rare, atypical events. For i.i.d.\ random variables,
+\[
+P\left(\frac{1}{n}\sum_{i=1}^n X_i \geq a\right) \approx e^{-n I(a)} \quad \text{for } a > \E[X],
+\]
+where $I(a)$ is the \textbf{rate function} (Legendre transform of the cumulant generating function).
+
+\subsection{Beyond Sums: Extreme Value Theorems}
+
+When studying maxima rather than sums, different universal laws emerge. The \textbf{Fisher-Tippett-Gnedenko theorem} states that properly normalized maxima of i.i.d.\ random variables converge to one of three \textbf{extreme value distributions}:
+\begin{itemize}
+    \item \textbf{Gumbel} (Type I): for light-tailed distributions (e.g., Gaussian, exponential)
+    \item \textbf{Fréchet} (Type II): for heavy-tailed distributions (e.g., Pareto, Cauchy)
+    \item \textbf{Weibull} (Type III): for bounded distributions
+\end{itemize}
+
+These distributions are fundamental for modeling worst-case scenarios in risk assessment, anomaly detection, and robustness analysis in machine learning systems.
+
+%========================================
+% CHAPTER 6: ENTROPY AND INFORMATION THEORY
+%========================================
+\chapter{Entropy and Information Theory}
+
+\section*{Why Entropy and Information Theory?}
+
+Entropy first appeared in thermodynamics as a measure of disorder and irreversibility in physical systems. Shannon's fundamental insight was that the same mathematical structure captures the uncertainty of an information source. This bridge from physics to information theory transformed entropy into one of the central concepts of modern probability, statistics, machine learning, and generative AI.
+
+In this chapter we adopt the information-theoretic viewpoint:
+\begin{itemize}
+    \item \textbf{Entropy} quantifies uncertainty and the minimal number of bits needed to encode a random variable.
+    \item \textbf{Kullback--Leibler (KL) divergence} measures how one probability distribution differs from another, forming the basis of likelihood-based training, variational inference, and normalizing flows.
+    \item \textbf{Mutual information} quantifies how much knowledge of one variable reduces uncertainty about another, playing a central role in representation learning, bottleneck architectures, and the analysis of neural networks.
+\end{itemize}
+
+These notions did not arise from AI, but they now underpin almost every modern generative model:
+\begin{itemize}
+    \item In \textbf{diffusion models}, entropy controls the trade-off between randomness and structure during denoising.
+    \item In \textbf{variational autoencoders (VAEs)}, KL divergence shapes the latent distribution and regularizes the encoder.
+    \item In \textbf{score-based and flow-matching models}, divergences between probability flows guide the training dynamics.
+\end{itemize}
+
+Although KL divergence dominates classical optimization-based approaches, it behaves poorly when distributions lie on low-dimensional manifolds or have non-overlapping support. This motivates the introduction of \textbf{Wasserstein distances}, which measure how probability mass must move in space and provide a more geometric notion of discrepancy.
+
+%----------------------------------------
+\section{Conditional Probability and Bayes' Rule}
+%----------------------------------------
+
+Modern AI systems operate under uncertainty: sensors are noisy, labels are imperfect, and environments are only partially observed. Whether it is a self-driving car estimating its position from noisy GPS and LiDAR data, or a medical AI diagnosing a disease from imperfect tests, such systems must continually update their beliefs in light of new evidence. This process is formalized by \textbf{conditional probability} and \textbf{Bayes' rule}.
+
+\subsection{Conditional Probability, Joint Laws, and Bayes' Rule}
+
+Let $A$ and $B$ be events in a probability space. The \textbf{conditional probability} of $A$ given $B$ is
+\[
+P(A \mid B) = \frac{P(A \cap B)}{P(B)}, \quad P(B) > 0.
+\]
+This tells us how to update our belief in $A$ after learning that $B$ has occurred. Rearranging gives the \textbf{multiplication rule}:
+\[
+P(A \cap B) = P(A \mid B) P(B) = P(B \mid A) P(A).
+\]
+
+Equating the two expressions for $P(A \cap B)$ yields \textbf{Bayes' rule}:
+\[
+P(A \mid B) = \frac{P(B \mid A) P(A)}{P(B)}, \quad P(B) = \sum_a P(B \mid A = a) P(A = a).
+\]
+
+The terms have standard names in Bayesian modeling:
+\begin{itemize}
+    \item $P(A)$: \textbf{prior} (belief before seeing $B$)
+    \item $P(B \mid A)$: \textbf{likelihood} (data model)
+    \item $P(A \mid B)$: \textbf{posterior} (updated belief)
+    \item $P(B)$: \textbf{evidence} or marginal likelihood
+\end{itemize}
+
+In AI applications we often write $A = X$ (hidden state, class, parameter) and $B = Z$ (observation, feature, measurement), so that
+\[
+P(X \mid Z) \propto P(Z \mid X) P(X),
+\]
+where the proportionality constant is the evidence $P(Z)$.
+
+\subsection{Discrete Bayes in a Toy Medical Diagnosis Model}
+
+To see Bayes' rule in action, consider a simple medical diagnosis problem. Both the (hidden) disease state and the observed test outcome are modeled as binary random variables:
+\[
+D \in \{0, 1\}, \quad T \in \{0, 1\},
+\]
+where $D = 1$ means ``sick'', $D = 0$ means ``healthy'', $T = 1$ means ``test positive'', and $T = 0$ means ``test negative''.
+
+We specify:
+\begin{itemize}
+    \item A \textbf{prior prevalence}: $P(D = 1) = \pi$, $P(D = 0) = 1 - \pi$
+    \item A \textbf{likelihood model} for the test:
+    \begin{align*}
+        \text{Sensitivity:} \quad & P(T = 1 \mid D = 1) = s \\
+        \text{Specificity:} \quad & P(T = 0 \mid D = 0) = c
+    \end{align*}
+\end{itemize}
+
+\begin{example}[Positive Test for a Rare Disease]
+Fix $\pi = 0.01$, $s = 0.95$, $c = 0.98$, so the disease is rare, but the test is quite accurate. Bayes' rule gives
+\[
+P(T = 1) = s\pi + (1 - c)(1 - \pi), \quad P(D = 1 \mid T = 1) = \frac{s\pi}{P(T = 1)}.
+\]
+Even with high sensitivity and specificity, the posterior $P(D = 1 \mid T = 1)$ may remain far from 1, because the prior prevalence $\pi$ is very small.
+\end{example}
+
+\subsection{From Na\"{\i}ve Bayes to Neural Networks}
+
+The toy example illustrated how Bayes' rule updates a prior belief in light of new evidence. We now move to a setting more directly connected to modern machine learning -- classification of images. Here, the goal is to infer a latent class label $C$ (e.g., a digit $0, \ldots, 9$) from observed features $F$ extracted from the image.
+
+Although state-of-the-art classifiers use neural networks, the probabilistic structure underlying Bayes' rule remains the same:
+\[
+P(C \mid F) \propto P(C) P(F \mid C).
+\]
+
+\begin{example}[Na\"{\i}ve Bayes vs Neural Network for MNIST]
+Given an image represented as a vector of discrete pixel intensities, Na\"{\i}ve Bayes models the likelihood as
+\[
+P(F \mid C = c) = \prod_{i=1}^d P(F_i \mid C = c),
+\]
+treating individual pixels as conditionally independent. This assumption is unrealistic for image data -- but surprisingly effective as a baseline, and invaluable as a conceptual stepping stone toward more flexible models.
+
+A small neural network trained by minimizing cross-entropy learns a much richer representation. Its predictions $\hat{p}(C \mid F)$ can be compared to Na\"{\i}ve Bayes using two complementary visualizations:
+\begin{itemize}
+    \item a \textbf{confusion matrix}, showing where each model makes mistakes;
+    \item a \textbf{calibration (reliability) curve}, comparing predicted probabilities to empirical frequencies.
+\end{itemize}
+\end{example}
+
+%----------------------------------------
+\section{Entropy: Quantifying Uncertainty}
+%----------------------------------------
+
+Entropy in AI serves two primary roles:
+\begin{itemize}
+    \item \textbf{Measuring Uncertainty}: The entropy of a probability distribution quantifies how uncertain or unpredictable a system is. High entropy corresponds to greater randomness, while low entropy suggests more certainty.
+    \item \textbf{Guiding Learning and Decision-Making}: Many AI models -- such as variational autoencoders (VAEs), generative adversarial networks (GANs), and diffusion models -- explicitly optimize entropy-based loss functions to balance structure and randomness.
+\end{itemize}
+
+\subsection{Definition and Interpretations of Entropy}
+
+For a discrete random variable $X$ with probability mass function $P(X)$, the \textbf{(Shannon) entropy} is
+\[
+H(X) = -\sum_{x \in \mathcal{X}} P(x) \log P(x).
+\]
+
+For a continuous random variable, the \textbf{differential entropy} is
+\[
+H(X) = -\int p(x) \log p(x) \, dx.
+\]
+
+Entropy admits several complementary interpretations:
+\begin{itemize}
+    \item \textbf{Uncertainty measure}: A uniform distribution has maximal entropy; a deterministic distribution has zero entropy.
+    \item \textbf{Expected information content}: Entropy is the expected number of nats (or bits) required to encode a sample drawn from $P$.
+    \item \textbf{Decision-theoretic perspective}: In reinforcement learning, entropy regularization helps balance exploration and exploitation.
+\end{itemize}
+
+\subsection{Mutual Information}
+
+\textbf{Mutual information} quantifies the amount of information shared between two random variables $X$ and $Y$. It measures how much knowing $Y$ reduces uncertainty about $X$ and vice versa. The mutual information is defined as:
+\[
+I(X; Y) = H(X) - H(X \mid Y),
+\]
+where $H(X)$ is the entropy of $X$ and $H(X \mid Y)$ is the conditional entropy of $X$ given $Y$.
+
+Equivalently, mutual information can be expressed as:
+\[
+I(X; Y) = \sum_{x,y} P(x, y) \log \frac{P(x, y)}{P(x)P(y)},
+\]
+which shows that mutual information measures the divergence between the joint distribution $P(X, Y)$ and the product of the marginal distributions $P(X)P(Y)$. If $X$ and $Y$ are independent, then $P(X, Y) = P(X)P(Y)$, leading to $I(X; Y) = 0$.
+
+\subsection{KL Divergence: Comparing Distributions}
+
+The \textbf{Kullback--Leibler (KL) divergence} quantifies how much one probability distribution $P$ differs from another $Q$. For discrete distributions:
+\[
+D_{\KL}(P \| Q) = \sum_x P(x) \log \frac{P(x)}{Q(x)}.
+\]
+
+Key properties:
+\begin{itemize}
+    \item \textbf{Non-negativity}: $D_{\KL}(P \| Q) \geq 0$, with equality if and only if $P = Q$ almost everywhere.
+    \item \textbf{Asymmetry}: $D_{\KL}(P \| Q) \neq D_{\KL}(Q \| P)$ in general.
+    \item \textbf{Not a metric}: KL divergence does not satisfy the triangle inequality.
+\end{itemize}
+
+\subsection{Cross-Entropy and Its Connection to KL Divergence}
+
+The \textbf{cross-entropy} between two discrete distributions $P$ and $Q$ is defined as
+\[
+H(P, Q) = -\sum_{x \in \mathcal{X}} P(x) \log Q(x).
+\]
+
+Cross-entropy is intimately connected to KL divergence:
+\[
+D_{\KL}(P \| Q) = H(P, Q) - H(P).
+\]
+
+Since $H(P)$ does not depend on $Q$, \textbf{minimizing the cross-entropy $H(P, Q)$ with respect to $Q$ is equivalent to minimizing the KL divergence $D_{\KL}(P \| Q)$}. This is why cross-entropy is the standard loss function in modern classification and generative modeling.
+
+\subsection{Wasserstein Distance: Geometry of Probability Distributions}
+
+KL divergence and cross-entropy quantify how one distribution differs informationally from another. But there are important situations where these quantities behave poorly:
+\begin{itemize}
+    \item KL divergence becomes infinite when the supports do not overlap;
+    \item small translations of a distribution can cause large KL divergence;
+    \item neither KL nor cross-entropy reflect the geometry of the space in which samples live.
+\end{itemize}
+
+The \textbf{Wasserstein distance} -- also called \textbf{Earth-Mover Distance (EMD)} -- addresses these limitations by measuring the cost of transporting mass from one distribution to another.
+
+\begin{definition}[1-Wasserstein distance]
+For two probability distributions $P$ and $Q$ on $\R^d$,
+\[
+W_1(P, Q) = \inf_{\gamma \in \Gamma(P,Q)} \E_{(X,Y) \sim \gamma}\left[\|X - Y\|\right],
+\]
+where $\Gamma(P, Q)$ is the set of all couplings (joint distributions) with marginals $P$ and $Q$.
+\end{definition}
+
+Wasserstein distances are true metrics on distributions, remain finite even when supports do not overlap, and incorporate the geometry of data.
+
+%----------------------------------------
+\section{Information Theory and Neural Networks}
+%----------------------------------------
+
+Information theory provides a rigorous language for describing how neural networks store, compress, transmit, and transform information. Shannon's foundational theorems -- the \textbf{Source Coding Theorem} and the \textbf{Channel Coding Theorem} -- establish fundamental limits on data compression and reliable communication.
+
+\subsection{Source Coding Theorem (Lossless Compression)}
+
+The \textbf{Source Coding Theorem} establishes the ultimate limit on how efficiently data from a probabilistic source can be encoded. For a discrete memoryless source producing a random variable $X$ with PMF $P(X)$, the minimum achievable average code length per symbol is asymptotically bounded below by the Shannon entropy $H(X)$.
+
+\subsection{Neural Networks as Encoding Schemes}
+
+Neural networks can be understood as \textbf{learned encoding schemes}. A standard feed-forward classifier performs a sequence of transformations
+\[
+X \longrightarrow Z \longrightarrow Y,
+\]
+where $X$ is the raw input, $Z$ is an internal representation, and $Y$ is the predicted label distribution.
+
+For a well-trained classifier, one expects $H(Z_{\text{deep}}) \approx H(Y)$, so that the representation is neither too redundant nor too compressed.
+
+\subsection{Autoencoders and Nonlinear Compression}
+
+A \textbf{nonlinear autoencoder} learns an encoder-decoder pair:
+\[
+X \longrightarrow Z \longrightarrow \hat{X},
+\]
+where the encoder maps high-dimensional input to a compressed latent representation, and the decoder reconstructs the input. From an information-theoretic view, an autoencoder is a learned compression scheme.
+
+\subsection{The Information Bottleneck Principle}
+
+The \textbf{Information Bottleneck (IB) principle} seeks a representation that is both minimal and sufficient:
+\[
+\min_{p(z|x)} I(X; Z) - \beta I(Z; Y),
+\]
+where $\beta > 0$ controls the trade-off between compression and predictive usefulness.
+
+The U-Net architecture exemplifies this principle, with its contracting path (encoder), bottleneck layer, and expanding path (decoder) with skip connections.
+
+%========================================
+% CHAPTER 7: STOCHASTIC PROCESSES
+%========================================
+\chapter{Stochastic Processes}
+
+\section*{Why Stochastic Processes?}
+
+Stochastic processes are central to generative AI:
+\begin{itemize}
+    \item \textbf{Diffusion models} generate data by learning to reverse a noise-adding process
+    \item \textbf{Markov Chain Monte Carlo (MCMC)} provides foundational sampling algorithms
+    \item \textbf{Auto-regressive models} (including modern LLMs) generate sequences token-by-token
+    \item \textbf{Reinforcement learning} frames decision-making as controlled stochastic dynamics
+\end{itemize}
+
+%----------------------------------------
+\section{Exact Sampling}
+%----------------------------------------
+
+\subsection{Inverse Transform Sampling}
+
+The simplest exact sampling method is \textbf{inverse transform sampling}. If $U \sim \text{Uniform}(0, 1)$, then $X = F_X^{-1}(U)$ has CDF $F_X$.
+
+\begin{example}[Sampling from an Exponential Distribution]
+The exponential distribution with rate $\lambda > 0$ has CDF $F_X(x) = 1 - e^{-\lambda x}$. Thus, to sample $X \sim \text{Exp}(\lambda)$: draw $U \sim \text{Uniform}(0, 1)$ and return $X = -\frac{1}{\lambda} \log(1 - U)$.
+\end{example}
+
+\subsection{Exact Sampling via Chain Rule}
+
+For multivariate distributions, we use the chain rule:
+\[
+p(x_1, x_2, \ldots, x_d) = p(x_1) \cdot p(x_2 \mid x_1) \cdot p(x_3 \mid x_1, x_2) \cdots p(x_d \mid x_1, \ldots, x_{d-1}).
+\]
+
+This \textbf{ancestral sampling} approach underlies auto-regressive generative models.
+
+%----------------------------------------
+\section{Importance Sampling and its Applications}
+%----------------------------------------
+
+When direct sampling from $p(x)$ is difficult but we can evaluate $p(x)$ pointwise, \textbf{importance sampling} provides an alternative. If we can sample from a proposal $q(x)$:
+\[
+\E_{X \sim p}[f(X)] = \E_{X \sim q}\left[f(X) \frac{p(X)}{q(X)}\right].
+\]
+
+The ratio $w(x) = p(x)/q(x)$ is the \textbf{importance weight}.
+
+The \textbf{Cross-Entropy Method} iteratively improves the proposal by minimizing cross-entropy between the proposal and a target distribution concentrated on high-value regions.
+
+%----------------------------------------
+\section{Diffusion and Brownian Motion}
+%----------------------------------------
+
+\textbf{Brownian motion} provides the mathematical foundation for diffusion-based generative models.
+
+\subsection{Standard Brownian Motion}
+
+A \textbf{standard Brownian motion} $\{W_t\}_{t \geq 0}$ has: $W_0 = 0$, independent Gaussian increments $W_t - W_s \sim \mathcal{N}(0, t-s)$, and continuous paths.
+
+\subsection{Langevin Dynamics}
+
+Adding a drift term gives the \textbf{Langevin equation}:
+\[
+dX_t = -\nabla U(X_t) \, dt + \sqrt{2D} \, dW_t,
+\]
+where $U(x)$ is a potential function. Under mild conditions, the process converges to the \textbf{Boltzmann distribution}:
+\[
+p^{(\text{st})}(x) \propto \exp\left(-\frac{U(x)}{D}\right).
+\]
+
+\begin{example}[Ornstein-Uhlenbeck Process]
+For a quadratic potential $U(x) = \frac{\lambda}{2} x^2$, the Langevin equation becomes the OU process $dX_t = -\lambda X_t \, dt + \sqrt{2D} \, dW_t$, which is exactly solvable with stationary distribution $\mathcal{N}(0, D/\lambda)$.
+\end{example}
+
+%----------------------------------------
+\section{Markov Chains}
+%----------------------------------------
+
+A \textbf{Markov chain} $\{X_n\}$ satisfies:
+\[
+P(X_{n+1} = x_{n+1} \mid X_n = x_n, \ldots, X_0 = x_0) = P(X_{n+1} = x_{n+1} \mid X_n = x_n).
+\]
+
+A distribution $\pi$ is \textbf{stationary} if $\pi = \pi P$. Under irreducibility and aperiodicity, the chain converges to a unique stationary distribution.
+
+\subsection{MCMC Methods}
+
+\textbf{Metropolis-Hastings}: Propose $Y \sim q(y \mid X_n)$, accept with probability
+\[
+\alpha = \min\left(1, \frac{\pi(Y) q(X_n \mid Y)}{\pi(X_n) q(Y \mid X_n)}\right).
+\]
+
+\textbf{Gibbs Sampling}: When full conditionals $p(X_i \mid X_{-i})$ are tractable, sample each variable in turn from its conditional.
+
+\textbf{Langevin Monte Carlo}: For continuous state spaces with differentiable log-density:
+\[
+X_{n+1} = X_n + \epsilon \nabla \log \pi(X_n) + \sqrt{2\epsilon} \, Z_n, \quad Z_n \sim \mathcal{N}(0, I).
+\]
+
+%----------------------------------------
+\section{Beyond Markov via Auto-Regressive Modeling}
+%----------------------------------------
+
+While Markov models assume the future depends only on the present, \textbf{auto-regressive models} capture long-range dependencies by conditioning on the entire history:
+\[
+p(X_1, \ldots, X_T) = \prod_{t=1}^T p(X_t \mid X_1, \ldots, X_{t-1}).
+\]
+
+\textbf{Transformers} use attention to directly access all previous tokens, enabling modeling of dependencies spanning thousands of tokens.
+
+\textbf{Sampling Strategies} for LLMs include temperature scaling, top-$k$ sampling, and nucleus (top-$p$) sampling, balancing diversity and coherence.
+
+%========================================
+% CHAPTER 8: ENERGY BASED (GRAPHICAL) MODELS
+%========================================
+\chapter{Energy Based (Graphical) Models}
+
+Energy-based models represent probability distributions via an \textbf{energy function}:
+\[
+p_\theta(x) \propto \exp(-E_\theta(x)),
+\]
+where lower energy corresponds to higher probability.
+
+%----------------------------------------
+\section{Inference}
+%----------------------------------------
+
+\subsection{Graphical Models}
+
+\textbf{Bayesian Networks} factorize joint distributions via DAGs:
+\[
+P(X_1, \ldots, X_n) = \prod_{i=1}^n P(X_i \mid \text{Pa}(X_i)).
+\]
+
+\textbf{Variational Methods} approximate intractable posteriors by minimizing KL divergence, leading to the \textbf{ELBO}:
+\[
+\log p(x) \geq \E_{q(z)}[\log p(x, z)] - \E_{q(z)}[\log q(z)].
+\]
+
+\textbf{Variational Auto-Encoders (VAEs)} combine variational inference with deep networks, using the \textbf{reparameterization trick} to enable gradient-based learning.
+
+%----------------------------------------
+\section{Learning}
+%----------------------------------------
+
+\subsection{Restricted Boltzmann Machines}
+
+An RBM has visible units $v$ and hidden units $h$ with energy:
+\[
+E(v, h) = -v^\top W h - b^\top v - c^\top h.
+\]
+
+Due to bipartite structure, conditionals factorize: $P(h_j = 1 \mid v) = \sigma(c_j + (W^\top v)_j)$.
+
+\textbf{Contrastive Divergence} approximates the gradient using short Gibbs chains starting from data.
+
+\subsection{From Graphical Models to Graph Neural Networks}
+
+GNNs can be viewed as learned message-passing schemes:
+\[
+h_v^{(l+1)} = \phi\left(h_v^{(l)}, \text{AGG}\left(\{h_u^{(l)} : u \in \mathcal{N}(v)\}\right)\right),
+\]
+mirroring belief propagation in graphical models.
+
+%========================================
+% CHAPTER 9: SYNTHESIS
+%========================================
+\chapter{Synthesis}
+
+This chapter synthesizes the major themes of the book, connecting score-based diffusion models, reinforcement learning, optimal transport, and decision-making under a unified mathematical umbrella.
+
+%----------------------------------------
+\section{Score-Based Diffusion Models}
+%----------------------------------------
+
+Score-based diffusion models feature:
+\begin{itemize}
+    \item A \textbf{forward SDE} that corrupts data: $dx_t = f(x_t, t) dt + g(x_t, t) dW_t$
+    \item A \textbf{reverse SDE} driven by the score function $s(x, t) = \nabla_x \log p_t(x)$
+\end{itemize}
+
+Training uses \textbf{denoising score matching}:
+\[
+\mathcal{L}(\theta) = \E\left[\|\nabla_{x_t} \log p(x_t|x_0) - s_\theta(x_t, t)\|^2\right].
+\]
+
+%----------------------------------------
+\section{A Unified View: Generative Models as Diffusions}
+%----------------------------------------
+
+\textbf{GANs} can be viewed as one-step reverse diffusions: $z \sim \mathcal{N}(0, I) \mapsto x = G_\theta(z)$.
+
+\textbf{VAEs} implement a two-step diffusion: encoding (forward) and decoding (reverse), with the ELBO balancing reconstruction and regularization.
+
+%----------------------------------------
+\section{Diffusion Models and Dynamic Phase Transitions}
+%----------------------------------------
+
+High-dimensional diffusions can undergo \textbf{sharp transitions} in sample quality, connecting to spin-glass theory and revealing deep mathematical structures underlying generative model behavior.
+
+%----------------------------------------
+\section{From MDP to Reinforcement Learning}
+%----------------------------------------
+
+\textbf{MDPs} provide the foundation for sequential decision-making. The \textbf{Bellman equation}:
+\[
+V^*(s) = \max_a \left[r(s, a) + \gamma \sum_{s'} P(s' \mid s, a) V^*(s')\right].
+\]
+
+\textbf{Policy gradient methods} directly optimize parameterized policies, with entropy regularization encouraging exploration.
+
+%----------------------------------------
+\section{Synthesis of Diffusion and Reinforcement Learning}
+%----------------------------------------
+
+\textbf{Path-Integral Diffusion (PID)} views both diffusion and RL through a single optimal-control lens, identifying regimes where the score admits closed-form expressions.
+
+%----------------------------------------
+\section{Sampling Decisions}
+%----------------------------------------
+
+\textbf{Generative Flow Networks (GFlowNets)} recast sampling as decision-making, building samples through sequences of decisions trained via flow matching.
+
+\textbf{Decision Flow} combines PID's linear solvability with auto-regressive structure, unifying diffusion, RL, and transformers.
+
+%----------------------------------------
+\section{Path Forward}
+%----------------------------------------
+
+A unifying mathematical language -- rooted in stochastic optimal control, optimal transport, and probability flows -- bridges:
+\begin{itemize}
+    \item Score-based diffusion (inverting stochastic processes)
+    \item RL (optimal control perspective)
+    \item GFlowNets/Decision Flow (decision-making on graphs)
+\end{itemize}
+
+Applications span molecular design, physical systems control, robotics, and epidemic modeling -- wherever timelines decompose into auto-regressive episodes.
+
+%========================================
+% BIBLIOGRAPHY
+%========================================
+\begin{thebibliography}{99}
+
+\bibitem{vaswani2017attention}
+A.~Vaswani, N.~Shazeer, N.~Parmar, J.~Uszkoreit, L.~Jones, A.~N.~Gomez, Ł.~Kaiser, and I.~Polosukhin.
+\newblock Attention is all you need.
+\newblock In \emph{Advances in Neural Information Processing Systems}, pages 5998--6008, 2017.
+
+\bibitem{lecun1998gradient}
+Y.~LeCun, L.~Bottou, Y.~Bengio, and P.~Haffner.
+\newblock Gradient-based learning applied to document recognition.
+\newblock \emph{Proceedings of the IEEE}, 86(11):2278--2324, 1998.
+
+\bibitem{krizhevsky2012imagenet}
+A.~Krizhevsky, I.~Sutskever, and G.~E.~Hinton.
+\newblock ImageNet classification with deep convolutional neural networks.
+\newblock In \emph{Advances in Neural Information Processing Systems}, pages 1097--1105, 2012.
+
+\bibitem{he2016deep}
+K.~He, X.~Zhang, S.~Ren, and J.~Sun.
+\newblock Deep residual learning for image recognition.
+\newblock In \emph{Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition}, pages 770--778, 2016.
+
+\bibitem{chen2018neural}
+R.~T.~Q.~Chen, Y.~Rubanova, J.~Bettencourt, and D.~K.~Duvenaud.
+\newblock Neural ordinary differential equations.
+\newblock In \emph{Advances in Neural Information Processing Systems}, pages 6571--6583, 2018.
+
+\bibitem{kingma2014adam}
+D.~P.~Kingma and J.~Ba.
+\newblock Adam: A method for stochastic optimization.
+\newblock \emph{arXiv preprint arXiv:1412.6980}, 2014.
+
+\bibitem{candes2006robust}
+E.~J.~Candès, J.~Romberg, and T.~Tao.
+\newblock Robust uncertainty principles: exact signal reconstruction from highly incomplete frequency information.
+\newblock \emph{IEEE Transactions on Information Theory}, 52(2):489--509, 2006.
+
+\bibitem{nesterov1983method}
+Y.~Nesterov.
+\newblock A method for unconstrained convex minimization problem with the rate of convergence $O(1/k^2)$.
+\newblock \emph{Doklady Akademii Nauk SSSR}, 269(3):543--547, 1983.
+
+\end{thebibliography}
+
+\end{document}

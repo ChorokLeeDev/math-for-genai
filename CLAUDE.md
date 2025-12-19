@@ -204,6 +204,22 @@ git commit -m "Update Chapter 6 notebook: Clarify KL Divergence penalty terms"
 git commit -m "Add Chapter 2 intuition: Forward vs Reverse AD complexity comparison"
 ```
 
+### Git Remotes
+
+**IMPORTANT:** Do NOT push to `origin` remote. Only push to `chorok` remote.
+
+**IMPORTANT:** Always pull and merge before pushing. Never force push.
+
+```bash
+# Before pushing, always pull first:
+git pull chorok main
+git push chorok main
+
+# NEVER do this:
+git push origin main      # ❌ Do not push to origin
+git push --force          # ❌ Never force push
+```
+
 ---
 
 ## 🛠️ Technical Notes
