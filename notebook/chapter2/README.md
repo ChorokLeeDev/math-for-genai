@@ -157,7 +157,7 @@ Reverse:  입력 많고, 출력 적을 때 (대부분의 AI!)
 - 출력 = Loss 1개
 - 입력 = 파라미터 수백만~수십억 개
 - → **Reverse Mode (Backpropagation)** 가 압도적으로 효율적!
-- **Many-to-One vs Many-to-Many**: 
+- **Many-to-One vs Many-to-Many**:
     - **Many-to-One**: 하나의 Loss를 최적화하기 위해 수백만 개의 파라미터를 미분하는 일반적인 AI 학습에 필수적입니다.
     - **Many-to-Many**: 일부 생성형 AI 작업에서는 출력도 다수일 수 있으며, AD를 특정 작업에 맞춰 튜닝하기도 합니다.
 - **Adjoint Method**: 미분방정식(ODE) 시스템에서 미분을 효율적으로 계산하기 위한 핵심 도구로 언급되었습니다.
@@ -670,10 +670,10 @@ print(x.grad)  # 손으로 계산하기 힘든 미분값이 바로!
 ### 💡 Lecture 2 Recap: ODE 기반 회귀의 강점
 Misha 교수는 강의에서 **데이터 기반(Polynomial) 회귀**와 **ODE 기반 회귀**를 직접 비교했습니다.
 
-1. **다항식 회귀(Polynomial Regression)**: 
+1. **다항식 회귀(Polynomial Regression)**:
     - 고차 다항식을 쓰면 데이터 사이의 간격(Gap)에서 요동치거나, 샘플링 범위 밖(Extrapolation)에서 예측이 완전히 어긋나는 과적합(Overfitting) 문제가 발생합니다.
-2. **ODE 기반 복원(ODE-based Reconstruction)**: 
-    - 프로세스가 ODE(예: $\dot{x} = -\gamma x + \text{noise}$)를 따른다는 물리적 지식이 있다면, 단 하나 또는 소수의 파라미터($\gamma$)만으로도 전체 흐름을 정확하게 복원할 수 있습니다. 
+2. **ODE 기반 복원(ODE-based Reconstruction)**:
+    - 프로세스가 ODE(예: $\dot{x} = -\gamma x + \text{noise}$)를 따른다는 물리적 지식이 있다면, 단 하나 또는 소수의 파라미터($\gamma$)만으로도 전체 흐름을 정확하게 복원할 수 있습니다.
     - 노이즈에 훨씬 강력하며, 데이터가 없는 구간에서도 물리 법칙에 따라 합리적인 예측이 가능합니다.
 
 > [!TIP]
@@ -769,6 +769,7 @@ $$\frac{dh_i}{dt} = \sum_{j \in \mathcal{N}(i)} f(h_i, h_j)$$
 
 | 연결 | 설명 |
 |------|------|
+| **Ch.1 → Ch.2** | 행렬 지수에서 고유값 분해(ED) 사용 |
 | **Ch.2 → Ch.3** | GD = ODE의 이산화: $\dot{W} = -\nabla L$ |
 | **Ch.2 → Ch.4** | **ResNet & Skip Connections**: $h_{t+1} = h_t + f(h_t)$ 식은 사실 **ODE의 Euler Discretization**($\dot{h} = f(h)$)과 정확히 동일합니다. 즉, 깊은 신경망은 미분방정식을 오랫동안 적분하는 과정으로 이해할 수 있습니다. |
 | **Ch.2 → Ch.7** | ODE → SDE (확률 추가) → Diffusion Model |
